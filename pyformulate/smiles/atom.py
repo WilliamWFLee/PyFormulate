@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
+from typing import Optional, Union
 
 
 class Element(Enum):
@@ -127,3 +128,29 @@ class Element(Enum):
     Lv = 116
     Ts = 117
     Og = 118
+
+
+class Atom:
+    """
+    Represents an atom, ion, etc.
+    """
+
+    def __init__(
+        self,
+        element: Union[str, Element],
+        *,
+        isotope: Optional[int] = None,
+        charge: int = 0,
+        chiral: bool = False,
+    ):
+        if isinstance(element, str):
+            try:
+                element = Element[element.title()]
+            except KeyError:
+                raise ValueError(f"{element!r} is not a valid symbol") from None
+        if isotope is None:
+            isotope = element.value
+        self.isotope = isotope
+        self.element = element
+        self.charge = charge
+        self.chiral = chiral
