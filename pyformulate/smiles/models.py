@@ -143,6 +143,7 @@ class Atom:
         charge: int = 0,
         chiral: bool = False,
         aromatic: bool = False,
+        bonds: Optional[Sequence['Bond']] = None,
     ):
         if isinstance(element, str):
             try:
@@ -156,6 +157,7 @@ class Atom:
         self.charge = charge
         self.chiral = chiral
         self.aromatic = aromatic
+        self.bonds = bonds if bonds else []
 
 
 class BondType(Enum):
