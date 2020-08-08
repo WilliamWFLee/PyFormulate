@@ -17,7 +17,7 @@ class Element(Enum):
     B = 5
     C = 6
     N = 7
-    O = 8
+    O = 8  # noqa: E741
     F = 9
     Ne = 10
     Na = 11
@@ -62,7 +62,7 @@ class Element(Enum):
     Sn = 50
     Sb = 51
     Te = 52
-    I = 53
+    I = 53  # noqa: E741
     Xe = 54
     Cs = 55
     Ba = 56
