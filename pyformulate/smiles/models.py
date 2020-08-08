@@ -130,6 +130,17 @@ class Element(Enum):
     Og = 118
 
 
+class BondType(Enum):
+    """
+    Bond type enumeration
+    """
+
+    SINGLE = 1
+    DOUBLE = 2
+    TRIPLE = 3
+    QUADRUPLE = 4
+
+
 class Atom:
     """
     Represents an atom, ion, etc.
@@ -143,7 +154,7 @@ class Atom:
         charge: int = 0,
         chiral: bool = False,
         aromatic: bool = False,
-        bonds: Optional[Sequence['Bond']] = None,
+        bonds: Sequence[Tuple['Atom', BondType]] = None,
     ):
         if isinstance(element, str):
             try:
@@ -158,24 +169,3 @@ class Atom:
         self.chiral = chiral
         self.aromatic = aromatic
         self.bonds = bonds if bonds else []
-
-
-class BondType(Enum):
-    """
-    Bond type enumeration
-    """
-
-    SINGLE = 1
-    DOUBLE = 2
-    TRIPLE = 3
-    QUADRUPLE = 4
-
-
-class Bond:
-    """
-    Represents a bond between two atoms
-    """
-
-    def __init__(self, atoms: Tuple[Atom, Atom], type_: BondType):
-        self.atoms = atoms
-        self.type = type_
