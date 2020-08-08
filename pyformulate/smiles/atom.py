@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 
 class Element(Enum):
@@ -142,6 +142,7 @@ class Atom:
         isotope: Optional[int] = None,
         charge: int = 0,
         chiral: bool = False,
+        aromatic: bool = False,
     ):
         if isinstance(element, str):
             try:
@@ -154,3 +155,4 @@ class Atom:
         self.element = element
         self.charge = charge
         self.chiral = chiral
+        self.aromatic = aromatic
