@@ -25,6 +25,7 @@ class TokenName(Enum):
     B_SLASH = auto()
     PERCENT = auto()
     ASTERISK = auto()
+    UNKNOWN = auto()
 
 
 class Lexer:
