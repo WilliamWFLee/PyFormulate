@@ -154,7 +154,7 @@ class Atom:
         charge: int = 0,
         chiral: bool = False,
         aromatic: bool = False,
-        bonds: Sequence[Tuple['Atom', BondType]] = None,
+        bonds: Sequence["Bond"] = None,
     ):
         if isinstance(element, str):
             try:
@@ -168,14 +168,20 @@ class Atom:
         self.charge = charge
         self.chiral = chiral
         self.aromatic = aromatic
-        self.bonds = bonds if bonds else []
+        self.bonds = list(bonds) if bonds else []
 
-    def bond(self, atom: 'Atom', bond_type: BondType = BondType.SINGLE):
-        self.bonds.append((atom, bond_type))
+    def bond(self, atom: "Atom", bond_type: BondType = BondType.SINGLE):
+        self.bonds.append(Bond(bond_type, self, atom))
 
-    def unbond(self, atom: 'Atom'):
-        for bond in self.bonds:
-            if bond[0] == atom:
-                self.bonds.remove(bond)
-                return
-        raise ValueError("{} is not bonded to this atom")
+
+class Bond:
+    """
+    Represents a bond between two Atoms
+    """
+
+    def __init__(self, type_: BondType, *atoms: Atom):
+        self.type = type_
+        self.atoms = atoms
+
+    def __contains__(self, atom: Atom):
+        return atom in self.atoms
