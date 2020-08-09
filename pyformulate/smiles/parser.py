@@ -114,12 +114,15 @@ class Parser:
 
         return molecule_idx, idx
 
-    def parse(self):
+    def parse(self) -> Tuple[List[List[Atom]], str]:
         self._molecules = []
-        _, idx = self._parse_chain(0)
-        idx += 1
-        char = self.formula[idx : idx + 1]
-        if char not in " \t\r\n":
-            raise ParserError("Unexpected character", self.formula, idx)
+        idx = 0
 
-        return self._molecules
+        if self.formula[0] not in " \t\r\n":
+            _, idx = self._parse_chain(0)
+            char = self.formula[idx : idx + 1]
+            if char not in " \t\r\n":
+                raise ParserError("Unexpected character", self.formula, idx)
+
+        remainder = self.formula[idx + 2 :]
+        return self._molecules, remainder
