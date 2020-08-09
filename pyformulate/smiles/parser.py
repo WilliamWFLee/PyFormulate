@@ -23,56 +23,63 @@ class Parser:
 
     def __init__(self, formula: str):
         self.formula = formula
+        self.species_list = []
 
-    def _parse_aromatic_organic(self, formula: str, start: int):
-        symbol = formula[start]
+    def _parse_aromatic_organic(self, start: int):
+        symbol = self.formula[start]
         if symbol not in AROMATIC_ORGANIC:
-            raise ParserError("Unknown organic aromatic element", formula, start)
+            raise ParserError("Unknown organic aromatic element", self.formula, start)
         atom = Atom(symbol, aromatic=True)
-        self._atom_stack.append(atom)
-
         return atom, start
 
-    def _parse_aliphatic_organic(self, formula: str, start: int):
-        match = ALIPHATIC_ORGANIC_REGEX.match(formula, start)
+    def _parse_aliphatic_organic(self, start: int):
+        match = ALIPHATIC_ORGANIC_REGEX.match(self.formula, start)
         if not match:
-            raise ParserError("Unknown organic aliphatic element", formula, start)
+            raise ParserError("Unknown organic aliphatic element", self.formula, start)
 
         symbol = match.group()
         atom = Atom(symbol)
-        self._atom_stack.append(atom)
-
         return atom, match.end() - 1
 
-    def _parse_organic_atom(self, formula: str, start: int):
-        if formula[start].islower():
-            atom, end = self._parse_aromatic_organic(formula, start)
+    def _parse_organic_atom(self, start: int):
+        if self.formula[start].islower():
+            atom, end = self._parse_aromatic_organic(start)
         else:
-            atom, end = self._parse_aliphatic_organic(formula, start)
+            atom, end = self._parse_aliphatic_organic(start)
 
         return atom, end
 
+    def _parse_chain(self, start: int = 0):
+        atom_stack = []
+        chain = []
+        idx = start
+
+        while idx < len(self.formula):
+            char = self.formula[idx]
+            if char.isalpha():
+                atom, idx = self._parse_organic_atom(idx)
+                if atom_stack:
+                    atom.bond(atom_stack[-1])
+                atom_stack.append(atom)
+                chain.append(atom)
+            else:
+                return False, idx
+            idx += 1
+
+        self.species_list.append(chain)
+        return True, idx
+
     def parse(self):
-        species_list = []
-        self._atom_stack = []
         idx = 0
 
-        species = []
         while idx < len(self.formula):
             char = self.formula[idx]
             if char in " \t\r\n":
                 break
-            if char.isalpha():
-                atom, idx = self._parse_organic_atom(self.formula, idx)
-                if self._atom_stack:
-                    atom.bond(self._atom_stack[-1])
-                self._atom_stack.append(atom)
-                species.append(atom)
+            result, idx = self._parse_chain(idx)
+            if not result:
+                raise ParserError("Unexpected character", self.formula, idx)
 
             idx += 1
 
-        if species:
-            species_list.append(species)
-
-        del self._atom_stack
-        return species_list
+        return self.species_list
