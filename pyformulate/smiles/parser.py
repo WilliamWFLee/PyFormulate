@@ -88,7 +88,7 @@ class Parser:
 
         atom, idx = self._parse_branched_atom(start)
         if atom:
-            self._molecules[molecule_idx].append(atom)
+            molecule.append(atom)
             chain.append(atom)
             idx += 1
         else:
@@ -100,26 +100,29 @@ class Parser:
                 bond_type, idx = self._parse_bond(idx)
                 idx += 1
 
-                length_before = len(molecule)
+                length_before = len(chain)
                 molecule_idx, idx = self._parse_chain(idx, molecule_idx, chain)
-                length_after = len(molecule)
+                length_after = len(chain)
 
                 if length_before == length_after:
                     raise ParserError(
                         "Expected atom after bond symbol", self.formula, idx - 1
                     )
 
-                chain.pop()
-                chain[-1].bond(molecule[length_before], bond_type, chain)
+                last_atom = chain.pop()
+                chain[-1].bond(last_atom, bond_type)
             elif char == ".":
                 idx += 1
                 molecule_idx, idx = self._parse_chain(idx)
             else:
-                atom, idx = self._parse_chain(idx, molecule_idx)
-                if atom:
+                length_before = len(chain)
+                molecule_idx, idx = self._parse_chain(idx, molecule_idx, chain)
+                length_after = len(chain)
+
+                if length_before != length_after:
+                    last_atom = chain.pop()
+                    chain[-1].bond(last_atom)
                     idx += 1
-                    chain.append(atom)
-                    chain[-1].bond(molecule[-1])
 
         return molecule_idx, idx
 
