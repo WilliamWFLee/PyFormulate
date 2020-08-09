@@ -209,3 +209,19 @@ class Bond:
 
     def __repr__(self):
         return str(self)
+
+
+class Molecule:
+    """
+    Represents a molecule
+    """
+
+    def __init__(self, atoms):
+        self.atoms = atoms
+
+    @property
+    def bonds(self):
+        bonds = set()
+        for atom in self.atoms:
+            bonds.add(atom.bonds)
+        return bonds
