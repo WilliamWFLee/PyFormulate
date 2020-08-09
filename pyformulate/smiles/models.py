@@ -174,6 +174,8 @@ class Atom:
         self.bonds = list(bonds) if bonds else []
 
     def bond(self, atom: "Atom", bond_type: BondType = BondType.SINGLE):
+        if atom == self:
+            raise ValueError("Cannot bond atom to itself")
         self.bonds.append(Bond(bond_type, self, atom))
 
 
