@@ -4,7 +4,7 @@
 import re
 from typing import List, Optional, Tuple
 
-from .models import Atom, BondType
+from .models import Atom, BondType, Molecule
 
 ALIPHATIC_ORGANIC_REGEX = re.compile(r"B|C|N|O|S|P|F|Cl|Br|I")
 AROMATIC_ORGANIC = "bcnosp"
@@ -21,7 +21,7 @@ class ParseResult:
     Represents the result of parsing a SMILES string
     """
 
-    def __init__(self, molecules: List[List[Atom]], remainder: str):
+    def __init__(self, molecules: List[Molecule], remainder: str):
         self.molecules = molecules
         self.remainder = remainder
 
@@ -147,4 +147,6 @@ class Parser:
                 raise ParserError("Unexpected character", self.formula, idx)
 
         remainder = self.formula[idx + 2 :]
-        return ParseResult(self._molecules, remainder)
+        return ParseResult(
+            [Molecule(molecule) for molecule in self._molecules], remainder
+        )
