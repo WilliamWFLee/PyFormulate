@@ -169,3 +169,13 @@ class Atom:
         self.chiral = chiral
         self.aromatic = aromatic
         self.bonds = bonds if bonds else []
+
+    def bond(self, atom: 'Atom', bond_type: BondType = BondType.SINGLE):
+        self.bonds.append((atom, bond_type))
+
+    def unbond(self, atom: 'Atom'):
+        for bond in self.bonds:
+            if bond[0] == atom:
+                self.bonds.remove(bond)
+                return
+        raise ValueError("{} is not bonded to this atom")
