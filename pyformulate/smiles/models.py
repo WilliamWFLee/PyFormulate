@@ -180,6 +180,15 @@ class Atom:
         for atm in (self, atom):
             atm.bonds.append(bond)
 
+    def __str__(self):
+        return "{0.isotope}{0.element.name}".format(self)
+
+    def __repr__(self):
+        return (
+            "{0.__name__}(element={1.element}, isotope={1.isotope}, charge={1.charge}, "
+            "chiral={1.chiral}, aromatic={1.aromatic})"
+        ).format(type(self), self)
+
 
 class Bond:
     """
@@ -192,3 +201,11 @@ class Bond:
 
     def __contains__(self, atom: Atom):
         return atom in self.atoms
+
+    def __str__(self):
+        return "<Bond between {1} and {2} of type {3.name}>".format(
+            *self.atoms, self.type
+        )
+
+    def __repr__(self):
+        return str(self)
