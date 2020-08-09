@@ -5,11 +5,11 @@ import argparse
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="A program for parsing SMILES chemical formulae to skeletal formulae"
+    )
     parser.add_argument(
-        "formula",
-        help="The formula to parse",
-        description="A program for parsing SMILES chemical formulae to skeletal formulae",
+        "formula", help="The formula to parse",
     )
 
     return parser, parser.parse_args()
