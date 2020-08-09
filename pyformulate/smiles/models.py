@@ -139,6 +139,9 @@ class BondType(Enum):
     DOUBLE = 2
     TRIPLE = 3
     QUADRUPLE = 4
+    AROMATIC = 5
+    BOTTOM_TOP = 6  # For cis-trans
+    TOP_BOTTOM = 7
 
 
 class Atom:
