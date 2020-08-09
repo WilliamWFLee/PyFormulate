@@ -70,7 +70,7 @@ class Parser:
         try:
             return char_to_bond_type[self.formula[start]], start
         except KeyError:
-            raise KeyError("Unknown bond type", self.formula, start)
+            raise ParserError("Unknown bond type", self.formula, start)
 
     def _parse_chain(
         self,
