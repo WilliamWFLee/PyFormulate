@@ -16,6 +16,16 @@ class ParserError(ValueError):
         super().__init__(error_message)
 
 
+class ParseResult:
+    """
+    Represents the result of parsing a SMILES string
+    """
+
+    def __init__(self, molecules: List[List[Atom]], remainder: str):
+        self.molecules = molecules
+        self.remainder = remainder
+
+
 class Parser:
     """
     Class for parsing SMILES
@@ -137,4 +147,4 @@ class Parser:
                 raise ParserError("Unexpected character", self.formula, idx)
 
         remainder = self.formula[idx + 2 :]
-        return self._molecules, remainder
+        return ParseResult(self._molecules, remainder)
