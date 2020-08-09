@@ -111,6 +111,9 @@ class Parser:
 
                 chain.pop()
                 chain[-1].bond(molecule[length_before], bond_type, chain)
+            elif char == ".":
+                idx += 1
+                molecule_idx, idx = self._parse_chain(idx)
             else:
                 atom, idx = self._parse_chain(idx, molecule_idx)
                 if atom:
