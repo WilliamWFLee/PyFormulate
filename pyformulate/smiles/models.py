@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
-from typing import Optional, Tuple, Union, Sequence
+from typing import Optional, Union, Sequence
 
 
 class Element(Enum):
