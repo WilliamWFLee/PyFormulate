@@ -101,7 +101,7 @@ class Parser:
                 idx += 1
 
                 length_before = len(molecule)
-                molecules, idx = self._parse_chain(idx, molecule_idx)
+                molecule_idx, idx = self._parse_chain(idx, molecule_idx, chain)
                 length_after = len(molecule)
 
                 if length_before == length_after:
@@ -109,8 +109,14 @@ class Parser:
                         "Expected atom after bond symbol", self.formula, idx - 1
                     )
 
-                chain[-1].bond(molecule[length_before], bond_type)
-                return molecules, idx
+                chain.pop()
+                chain[-1].bond(molecule[length_before], bond_type, chain)
+            else:
+                atom, idx = self._parse_chain(idx, molecule_idx)
+                if atom:
+                    idx += 1
+                    chain.append(atom)
+                    chain[-1].bond(molecule[-1])
 
         return molecule_idx, idx
 
