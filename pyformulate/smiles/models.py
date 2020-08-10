@@ -203,7 +203,7 @@ class Bond:
         return atom in self.atoms
 
     def __str__(self):
-        return "<Bond between {1} and {2} of type {3.name}>".format(
+        return "<Bond between {0} and {1} of type {2.name}>".format(
             *self.atoms, self.type
         )
 
