@@ -162,7 +162,10 @@ class Decoder:
     def decode(self) -> DecodeResult:
         self._molecules = []
         if self._stream.next not in " \t\r\n":
-            self._parse_chain()
+            try:
+                self._parse_chain()
+            except StopIteration:
+                raise DecodeError("Unexpected end-of-input", "", self._stream.pos)
             try:
                 terminator = next(self._stream)
                 if terminator not in " \t\r\n":
