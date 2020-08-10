@@ -28,6 +28,10 @@ class PeekableStream:
         except IndexError:
             return None
 
+    @property
+    def remainder(self):
+        return self.value[self.pos:]
+
     def __next__(self):
         try:
             return self.value[self.pos]
