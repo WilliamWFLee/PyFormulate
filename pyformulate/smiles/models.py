@@ -220,7 +220,7 @@ class Atom:
         *,
         isotope: Optional[int] = None,
         charge: int = 0,
-        chiral: bool = False,
+        chiral_class: Optional[ChiralClass] = None,
         aromatic: bool = False,
         bonds: Sequence["Bond"] = None,
     ):
@@ -234,7 +234,7 @@ class Atom:
         self.isotope = isotope
         self.element = element
         self.charge = charge
-        self.chiral = chiral
+        self.chiral_class = chiral_class
         self.aromatic = aromatic
         self.bonds = list(bonds) if bonds else []
 
@@ -251,7 +251,7 @@ class Atom:
     def __repr__(self):
         return (
             "{0.__name__}(element={1.element}, isotope={1.isotope}, charge={1.charge}, "
-            "chiral={1.chiral}, aromatic={1.aromatic})"
+            "chiral_class={1.chiral_class}, aromatic={1.aromatic})"
         ).format(type(self), self)
 
 
