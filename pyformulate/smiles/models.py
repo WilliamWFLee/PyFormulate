@@ -153,7 +153,7 @@ class ChiralClass(Enum):
     _ANTICLOCKWISE = -1  # Indicates an atom requires further analysis
     _CLOCKWISE = -2      # to determine if TH or AL
     TH1 = 1
-    TH1 = 2
+    TH2 = 2
     AL1 = 3
     AL2 = 4
     SP1 = 5
