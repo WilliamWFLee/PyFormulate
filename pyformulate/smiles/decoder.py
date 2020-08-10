@@ -7,6 +7,15 @@ from .models import Atom, BondType, Molecule
 
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
 AROMATIC_ORGANIC = "bcnosp"
+CHAR_TO_BOND_TYPE = {
+    "-": BondType.SINGLE,
+    "=": BondType.DOUBLE,
+    "#": BondType.TRIPLE,
+    "$": BondType.QUADRUPLE,
+    ":": BondType.AROMATIC,
+    "/": BondType.BOTTOM_TOP,
+    "\\": BondType.TOP_BOTTOM,
+}
 
 
 class PeekableStream:
@@ -110,19 +119,9 @@ class Decoder:
         return None
 
     def _parse_bond(self) -> Tuple[BondType]:
-        char_to_bond_type = {
-            "-": BondType.SINGLE,
-            "=": BondType.DOUBLE,
-            "#": BondType.TRIPLE,
-            "$": BondType.QUADRUPLE,
-            ":": BondType.AROMATIC,
-            "/": BondType.BOTTOM_TOP,
-            "\\": BondType.TOP_BOTTOM,
-        }
-
         bond = next(self._stream)
         try:
-            return char_to_bond_type[bond]
+            return CHAR_TO_BOND_TYPE[bond]
         except KeyError:
             raise DecodeError("Unknown bond type", bond, self._stream.pos - 1)
 
