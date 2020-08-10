@@ -10,15 +10,15 @@ ALIPHATIC_ORGANIC_REGEX = re.compile(r"B|C|N|O|S|P|F|Cl|Br|I")
 AROMATIC_ORGANIC = "bcnosp"
 
 
-class ParserError(ValueError):
+class DecodeError(ValueError):
     def __init__(self, msg, doc, pos):
         error_message = "{}: character {!r}, position {}".format(msg, doc[pos], pos)
         super().__init__(error_message)
 
 
-class ParseResult:
+class DecodeResult:
     """
-    Represents the result of parsing a SMILES string
+    Represents the result of decoding a SMILES string
     """
 
     def __init__(self, molecules: List[Molecule], remainder: str):
@@ -26,9 +26,9 @@ class ParseResult:
         self.remainder = remainder
 
 
-class Parser:
+class Decoder:
     """
-    Class for parsing SMILES
+    Class for decoding SMILES
     """
 
     def __init__(self, formula: str):
@@ -38,14 +38,14 @@ class Parser:
     def _parse_aromatic_organic(self, start: int) -> Tuple[Atom, int]:
         symbol = self.formula[start]
         if symbol not in AROMATIC_ORGANIC:
-            raise ParserError("Unknown organic aromatic element", self.formula, start)
+            raise DecodeError("Unknown organic aromatic element", self.formula, start)
         atom = Atom(symbol, aromatic=True)
         return atom, start
 
     def _parse_aliphatic_organic(self, start: int) -> Tuple[Atom, int]:
         match = ALIPHATIC_ORGANIC_REGEX.match(self.formula, start)
         if not match:
-            raise ParserError("Unknown organic aliphatic element", self.formula, start)
+            raise DecodeError("Unknown organic aliphatic element", self.formula, start)
 
         symbol = match.group()
         atom = Atom(symbol)
@@ -80,7 +80,7 @@ class Parser:
         try:
             return char_to_bond_type[self.formula[start]], start
         except KeyError:
-            raise ParserError("Unknown bond type", self.formula, start)
+            raise DecodeError("Unknown bond type", self.formula, start)
 
     def _parse_chain(
         self,
@@ -115,7 +115,7 @@ class Parser:
                 length_after = len(chain)
 
                 if length_before == length_after:
-                    raise ParserError(
+                    raise DecodeError(
                         "Expected atom after bond symbol", self.formula, idx - 1
                     )
 
@@ -136,7 +136,7 @@ class Parser:
 
         return molecule_idx, idx
 
-    def parse(self) -> Tuple[List[List[Atom]], str]:
+    def decode(self) -> Tuple[List[List[Atom]], str]:
         self._molecules = []
         idx = 0
 
@@ -144,9 +144,9 @@ class Parser:
             _, idx = self._parse_chain(0)
             char = self.formula[idx : idx + 1]
             if char not in " \t\r\n":
-                raise ParserError("Unexpected character", self.formula, idx)
+                raise DecodeError("Unexpected character", self.formula, idx)
 
         remainder = self.formula[idx + 2 :]
-        return ParseResult(
+        return DecodeResult(
             [Molecule(molecule) for molecule in self._molecules], remainder
         )
