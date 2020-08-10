@@ -130,8 +130,52 @@ class Decoder:
             return Element[symbol], False
         return None, None
 
+    def _parse_digit(self) -> Optional[str]:
+        if self._stream.next.isnumeric():
+            return next(self._stream)
+        return None
+
     def _parse_chiral(self) -> Optional[ChiralClass]:
-        pass
+        at_sym = self._stream.next
+        if at_sym != "@":
+            return None
+
+        next(self._stream)
+        if self._stream.next == "@":
+            next(self._stream)
+            return ChiralClass._CLOCKWISE
+        if self._stream.next.isalpha() and self._stream.next.isupper():
+            chiral_type = next(self._stream)
+            if not (self._stream.next.isalpha() and self._stream.next.isupper()):
+                raise DecodeError(
+                    "Incomplete chiral class", chiral_type, self._stream.pos - 1
+                )
+            chiral_type += next(self._stream)
+
+            class_number = ""
+            while True:
+                digit = self._parse_digit()
+                if digit is None:
+                    break
+                class_number += digit
+
+            if class_number == "":
+                raise DecodeError(
+                    "Chiral class number not specified",
+                    chiral_type,
+                    self._stream.pos - len(chiral_type),
+                )
+
+            chiral_type += class_number
+            if chiral_type not in ChiralClass.__members__:
+                raise DecodeError(
+                    "Unknown chiral class",
+                    chiral_type,
+                    self._stream.pos - len(chiral_type),
+                )
+            return ChiralClass[chiral_type]
+
+        return ChiralClass._ANTICLOCKWISE
 
     def _parse_bracket_atom(self) -> Optional[Atom]:
         open_bracket = self._stream.next
@@ -148,7 +192,10 @@ class Decoder:
                 self._stream.pos,
             )
 
-        atom = Atom(element, isotope=isotope, aromatic=aromatic)
+        chiral_class = self._parse_chiral()
+        atom = Atom(
+            element, isotope=isotope, aromatic=aromatic, chiral_class=chiral_class
+        )
         close_bracket = next(self._stream)
         if close_bracket != "]":
             raise DecodeError(
