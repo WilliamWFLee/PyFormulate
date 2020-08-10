@@ -19,6 +19,11 @@ def test_unknown_element():
     assert loads("[*]").molecules[0].atoms[0].element == Element.UNKNOWN
 
 
+def test_invalid_elements():
+    with pytest.raises(DecodeError):
+        assert loads("[]")  # Empty bracket atom
+
+
 def test_explicit_hydrogen_count():
     assert loads("[CH4]").molecules[0].elem_count(Element.H) == 4
     assert loads("[ClH1]").molecules[0].elem_count(Element.H) == 1
