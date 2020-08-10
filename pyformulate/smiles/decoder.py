@@ -29,14 +29,15 @@ class PeekableStream:
 
     @property
     def remainder(self):
-        return self.value[self.pos:]
+        return self.value[self.pos :]
 
     def __next__(self):
         try:
             return self.value[self.pos]
-            self.pos += 1
         except IndexError:
             raise StopIteration() from None
+        finally:
+            self.pos += 1
 
     def __iter__(self):
         return self
