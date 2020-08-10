@@ -119,16 +119,26 @@ class Decoder:
         return int(number) if number else None
 
     def _parse_symbol(self) -> Tuple[Optional[Element], Optional[bool]]:
-        symbol = next(self._stream)
+        symbol = self._stream.next
         if symbol == "*":
+            next(self._stream)
             return Element.UNKNOWN, False
-        if self._stream.next.isalpha() and self._stream.next.islower():
+        if not symbol.isalpha():
+            return None, None
+        if symbol.islower():
+            if symbol in AROMATIC:
+                next(self._stream)
+                return Element[symbol.title()], True
+            else:
+                raise DecodeError("Unknown aromatic", symbol, self._stream.pos)
+
+        next(self._stream)
+        if self._stream.next.islower():
             symbol += next(self._stream)
-        if symbol in AROMATIC:
-            return Element[symbol.title()], True
         if symbol in Element.__members__:
             return Element[symbol], False
-        return None, None
+        else:
+            raise DecodeError("Unknown element", symbol, self._stream.pos - len(symbol))
 
     def _parse_digit(self) -> Optional[str]:
         if self._stream.next.isnumeric():
