@@ -17,15 +17,23 @@ class PeekableStream:
     """
 
     def __init__(self, value: str):
-        self.iter = iter(value)
+        self.value = value
+        self.pos = 0
         self._fill()
 
-    def _fill(self):
-        self.next = next(self.iter)
+    @property
+    def next(self):
+        try:
+            return self.value[self.pos]
+        except IndexError:
+            return None
 
     def __next__(self):
-        return self.next
-        self._fill()
+        try:
+            return self.value[self.pos]
+            self.pos += 1
+        except IndexError:
+            raise StopIteration() from None
 
     def __iter__(self):
         return self
