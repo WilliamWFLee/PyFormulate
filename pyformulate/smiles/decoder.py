@@ -19,7 +19,6 @@ class PeekableStream:
     def __init__(self, value: str):
         self.value = value
         self.pos = 0
-        self._fill()
 
     @property
     def next(self):
