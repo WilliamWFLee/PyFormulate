@@ -3,7 +3,7 @@
 
 from typing import List, Optional, Tuple
 
-from .models import Atom, BondType, Molecule, Element
+from .models import Atom, BondType, Element, Molecule
 
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
 AROMATIC_ORGANIC = "bcnosp"
@@ -78,7 +78,7 @@ class Decoder:
         self.species_list = []
         self._stream = PeekableStream(smiles)
 
-    def _parse_aromatic_organic(self) -> Atom:
+    def _parse_aromatic_organic(self) -> Optional[Atom]:
         atom = None
         symbol = self._stream.next
         if symbol.isalpha() and symbol.islower():
@@ -87,7 +87,7 @@ class Decoder:
             atom = Atom(next(self._stream), aromatic=True)
         return atom
 
-    def _parse_aliphatic_organic(self) -> Atom:
+    def _parse_aliphatic_organic(self) -> Optional[Atom]:
         symbol = self._stream.next
         if not (symbol.isalpha() and symbol.isupper()):
             return None
@@ -100,7 +100,7 @@ class Decoder:
             return Atom(symbol)
         raise DecodeError("Unknown aliphatic organic", symbol, self._stream.pos - 1)
 
-    def _parse_organic_atom(self) -> Atom:
+    def _parse_organic_atom(self) -> Optional[Atom]:
         atom = None
         for atom_parser in (
             self._parse_aromatic_organic,
@@ -111,7 +111,7 @@ class Decoder:
                 break
         return atom
 
-    def _parse_isotope(self) -> int:
+    def _parse_isotope(self) -> Optional[int]:
         number = ""
         while self._stream.next.isnumeric():
             number += next(self._stream)
@@ -130,7 +130,7 @@ class Decoder:
             return Element[symbol], False
         return None, None
 
-    def _parse_bracket_atom(self) -> Atom:
+    def _parse_bracket_atom(self) -> Optional[Atom]:
         open_bracket = self._stream.next
         if open_bracket != "[":
             return None
@@ -167,7 +167,7 @@ class Decoder:
     def _parse_branched_atom(self) -> Optional[Atom]:
         return self._parse_atom()
 
-    def _parse_bond(self) -> BondType:
+    def _parse_bond(self) -> Optional[BondType]:
         bond_char = self._stream.next
         if bond_char in CHAR_TO_BOND_TYPE:
             return CHAR_TO_BOND_TYPE[next(self._stream)]
