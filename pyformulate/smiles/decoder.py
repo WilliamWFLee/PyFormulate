@@ -79,38 +79,36 @@ class Decoder:
         self._stream = PeekableStream(smiles)
 
     def _parse_aromatic_organic(self) -> Atom:
-        symbol = next(self._stream)
-        if symbol not in AROMATIC_ORGANIC:
-            raise DecodeError(
-                "Unknown organic aromatic element", symbol, self._stream.pos - 1
-            )
-        atom = Atom(symbol, aromatic=True)
+        atom = None
+        symbol = self._stream.next
+        if symbol.isalpha() and symbol.islower():
+            if symbol not in AROMATIC_ORGANIC:
+                raise DecodeError("Unknown aromatic organic", symbol, self._stream.pos)
+            atom = Atom(next(self._stream), aromatic=True)
         return atom
 
     def _parse_aliphatic_organic(self) -> Atom:
-        symbol = next(self._stream)
+        symbol = self._stream.next
+        if not (symbol.isalpha() and symbol.isupper()):
+            return None
+
+        next(self._stream)
+        next_char = self._stream.next
+        if next_char.isalpha() and next_char.islower():
+            symbol += next(self._stream)
         if symbol in ALIPHATIC_ORGANIC:
             return Atom(symbol)
-
-        next_char = self._stream.next
-        if not (next_char.isalpha() and next_char.islower()):
-            raise DecodeError(
-                "Unknown organic aliphatic element", symbol, self._stream.pos - 1
-            )
-
-        symbol += next(self._stream)
-        if symbol not in ALIPHATIC_ORGANIC:
-            raise DecodeError(
-                "Unknown organic aliphatic element", symbol, self._stream.pos - 2
-            )
-        return Atom(symbol)
+        raise DecodeError("Unknown aliphatic organic", symbol, self._stream.pos - 1)
 
     def _parse_organic_atom(self) -> Atom:
-        if self._stream.next.islower():
-            atom = self._parse_aromatic_organic()
-        else:
-            atom = self._parse_aliphatic_organic()
-
+        atom = None
+        for atom_parser in (
+            self._parse_aromatic_organic,
+            self._parse_aliphatic_organic,
+        ):
+            atom = atom_parser()
+            if atom is not None:
+                break
         return atom
 
     def _parse_isotope(self) -> int:
@@ -133,10 +131,11 @@ class Decoder:
         return None, None
 
     def _parse_bracket_atom(self) -> Atom:
-        open_bracket = next(self._stream)
+        open_bracket = self._stream.next
         if open_bracket != "[":
             return None
 
+        next(self._stream)
         isotope = self._parse_isotope()
         element, aromatic = self._parse_symbol()
         if element is None:
@@ -159,22 +158,20 @@ class Decoder:
 
     def _parse_atom(self) -> Optional[Atom]:
         atom = None
-        if self._stream.next.isalpha():
-            atom = self._parse_organic_atom()
-        elif self._stream.next == "[":
-            atom = self._parse_bracket_atom()
-
+        for atom_parser in (self._parse_bracket_atom, self._parse_organic_atom):
+            atom = atom_parser()
+            if atom is not None:
+                break
         return atom
 
     def _parse_branched_atom(self) -> Optional[Atom]:
         return self._parse_atom()
 
-    def _parse_bond(self) -> Tuple[BondType]:
-        bond = next(self._stream)
-        try:
-            return CHAR_TO_BOND_TYPE[bond]
-        except KeyError:
-            raise DecodeError("Unknown bond type", bond, self._stream.pos - 1)
+    def _parse_bond(self) -> BondType:
+        bond_char = self._stream.next
+        if bond_char in CHAR_TO_BOND_TYPE:
+            return CHAR_TO_BOND_TYPE[next(self._stream)]
+        return None
 
     def _parse_chain(self, molecule_idx: Optional[int] = None) -> Atom:
         if molecule_idx is None:
@@ -188,26 +185,32 @@ class Decoder:
         else:
             return None
 
-        char = self._stream.next
-        if not char:
+        if not self._stream.next:
             return atom
-        if char in r"\/-=#$:":
-            bond_type = self._parse_bond()
-            next_atom = self._parse_chain(molecule_idx)
 
+        if self._stream.next == ".":
+            next(self._stream)
+            next_atom = self._parse_chain()
+            if not next_atom:
+                raise DecodeError("Expected chain after dot", ".", self._stream.pos)
+            return
+
+        bond_type = self._parse_bond()
+        if bond_type is not None:
+            next_atom = self._parse_chain(molecule_idx)
             if next_atom is None:
                 raise DecodeError(
-                    "Expected atom after bond symbol", char, self._stream.pos
+                    "Expected atom after bond symbol",
+                    self._stream.next,
+                    self._stream.pos,
                 )
 
             atom.bond(next_atom, bond_type)
-        elif char == ".":
-            next(self._stream)
-            self._parse_chain()
-        else:
-            next_atom = self._parse_chain(molecule_idx)
-            if next_atom is not None:
-                atom.bond(next_atom)
+            return
+
+        next_atom = self._parse_chain(molecule_idx)
+        if next_atom is not None:
+            atom.bond(next_atom)
 
     def decode(self) -> DecodeResult:
         self._molecules = []
@@ -220,7 +223,7 @@ class Decoder:
                 terminator = next(self._stream)
                 if terminator not in " \t\r\n":
                     raise DecodeError(
-                        "Unexpected character", terminator, self._stream.pos
+                        "Unexpected character", terminator, self._stream.pos - 1
                     )
             except StopIteration:
                 pass
