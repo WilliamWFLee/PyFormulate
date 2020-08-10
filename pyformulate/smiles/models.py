@@ -292,3 +292,14 @@ class Molecule:
         for atom in self.atoms:
             bonds.add(atom.bonds)
         return bonds
+
+    def elem_count(self, element: Element) -> int:
+        """
+        Returns the number of atoms of the specified element
+
+        :param element: The element to count
+        :type element: Element
+        :return: The number of atoms of that element
+        :rtype: int
+        """
+        return sum(1 for atom in self.atoms if atom.element == element)
