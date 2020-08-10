@@ -52,28 +52,28 @@ class Decoder:
     Class for decoding SMILES
     """
 
-    def __init__(self, formula: str):
-        self.formula = formula
+    def __init__(self, smiles: str):
+        self.smiles = smiles
         self.species_list = []
 
     def _parse_aromatic_organic(self, start: int) -> Tuple[Atom, int]:
-        symbol = self.formula[start]
+        symbol = self.smiles[start]
         if symbol not in AROMATIC_ORGANIC:
-            raise DecodeError("Unknown organic aromatic element", self.formula, start)
+            raise DecodeError("Unknown organic aromatic element", self.smiles, start)
         atom = Atom(symbol, aromatic=True)
         return atom, start
 
     def _parse_aliphatic_organic(self, start: int) -> Tuple[Atom, int]:
-        match = ALIPHATIC_ORGANIC_REGEX.match(self.formula, start)
+        match = ALIPHATIC_ORGANIC_REGEX.match(self.smiles, start)
         if not match:
-            raise DecodeError("Unknown organic aliphatic element", self.formula, start)
+            raise DecodeError("Unknown organic aliphatic element", self.smiles, start)
 
         symbol = match.group()
         atom = Atom(symbol)
         return atom, match.end() - 1
 
     def _parse_organic_atom(self, start: int) -> Tuple[Atom, int]:
-        if self.formula[start].islower():
+        if self.smiles[start].islower():
             atom, end = self._parse_aromatic_organic(start)
         else:
             atom, end = self._parse_aliphatic_organic(start)
@@ -81,7 +81,7 @@ class Decoder:
         return atom, end
 
     def _parse_branched_atom(self, start: int) -> Tuple[Optional[Atom], int]:
-        char = self.formula[start : start + 1]
+        char = self.smiles[start : start + 1]
         if char.isalpha():
             atom, end = self._parse_organic_atom(start)
             return atom, end
@@ -99,9 +99,9 @@ class Decoder:
         }
 
         try:
-            return char_to_bond_type[self.formula[start]], start
+            return char_to_bond_type[self.smiles[start]], start
         except KeyError:
-            raise DecodeError("Unknown bond type", self.formula, start)
+            raise DecodeError("Unknown bond type", self.smiles, start)
 
     def _parse_chain(
         self,
@@ -125,7 +125,7 @@ class Decoder:
         else:
             return molecule_idx, idx
 
-        char = self.formula[idx : idx + 1]
+        char = self.smiles[idx : idx + 1]
         if char:
             if char in r"\/-=#$:":
                 bond_type, idx = self._parse_bond(idx)
@@ -137,7 +137,7 @@ class Decoder:
 
                 if length_before == length_after:
                     raise DecodeError(
-                        "Expected atom after bond symbol", self.formula, idx - 1
+                        "Expected atom after bond symbol", self.smiles, idx - 1
                     )
 
                 last_atom = chain.pop()
@@ -161,13 +161,13 @@ class Decoder:
         self._molecules = []
         idx = 0
 
-        if self.formula[0] not in " \t\r\n":
+        if self.smiles[0] not in " \t\r\n":
             _, idx = self._parse_chain(0)
-            char = self.formula[idx : idx + 1]
+            char = self.smiles[idx : idx + 1]
             if char not in " \t\r\n":
-                raise DecodeError("Unexpected character", self.formula, idx)
+                raise DecodeError("Unexpected character", self.smiles, idx)
 
-        remainder = self.formula[idx + 2 :]
+        remainder = self.smiles[idx + 2 :]
         return DecodeResult(
             [Molecule(molecule) for molecule in self._molecules], remainder
         )
