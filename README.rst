@@ -8,30 +8,32 @@ To-do list
 
 - [-] Grammar
 
-    - [-] Atoms
+  - [-] Atoms
 
-        - [-] Bracket Atoms
-        - [x] Aliphatic Organic Atoms
-        - [x] Aromatic Organic Atoms
+    - [-] Bracket Atoms
+    - [x] Aliphatic Organic Atoms
+    - [x] Aromatic Organic Atoms
 
-    - [-] Chirality
-        - [-] Tetrahedral
-        - [x] Cis-trans
-        - [-] Tetrahedral allene-like
-        - [-] Square-planar 
-        - [-] Trigonal bipyramidal
-        - [-] Octohedral
+  - [-] Chirality
 
-    - [-] Hydrogen count
-    - [-] Charge
-    - [ ] Atom class
-    - [-] Bonds
+    - [-] Tetrahedral
+    - [x] Cis-trans
+    - [-] Tetrahedral allene-like
+    - [-] Square-planar
+    - [-] Trigonal bipyramidal
+    - [-] Octohedral
 
-        - [x] Bond symbols
-        - [ ] Ring bonds
+  - [-] Hydrogen count
+  - [-] Charge
+  - [ ] Atom class
+  - [-] Bonds
 
-    - [-] Chains
-        - [ ] Branches
-        - [-] Branched atoms
+    - [x] Bond symbols
+    - [ ] Ring bonds
 
-    - [x] Terminator
+  - [-] Chains
+
+    - [ ] Branches
+    - [-] Branched atoms
+
+  - [x] Terminator
