@@ -304,3 +304,7 @@ class Decoder:
         return DecodeResult(
             [Molecule(molecule) for molecule in self._molecules], self._stream.remainder
         )
+
+
+def loads(s: str) -> DecodeResult:
+    return Decoder(s).decode()
