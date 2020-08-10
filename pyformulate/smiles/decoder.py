@@ -10,6 +10,27 @@ ALIPHATIC_ORGANIC_REGEX = re.compile(r"B|C|N|O|S|P|F|Cl|Br|I")
 AROMATIC_ORGANIC = "bcnosp"
 
 
+class PeekableStream:
+    """
+    Class for producing a peekable stream of characters from a string,
+    that can peek one character ahead.
+    """
+
+    def __init__(self, value: str):
+        self.iter = iter(value)
+        self._fill()
+
+    def _fill(self):
+        self.next = next(self.iter)
+
+    def __next__(self):
+        return self.next
+        self._fill()
+
+    def __iter__(self):
+        return self
+
+
 class DecodeError(ValueError):
     def __init__(self, msg, doc, pos):
         error_message = "{}: character {!r}, position {}".format(msg, doc[pos], pos)
