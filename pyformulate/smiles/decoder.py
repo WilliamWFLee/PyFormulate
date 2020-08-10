@@ -126,11 +126,7 @@ class Decoder:
         except KeyError:
             raise DecodeError("Unknown bond type", bond, self._stream.pos - 1)
 
-    def _parse_chain(
-        self, molecule_idx: Optional[int] = None, chain: Optional[List[Atom]] = None,
-    ) -> Tuple[int, int]:
-        if chain is None:
-            chain = []
+    def _parse_chain(self, molecule_idx: Optional[int] = None) -> Atom:
         if molecule_idx is None:
             self._molecules.append([])
             molecule_idx = len(self._molecules) - 1
@@ -139,40 +135,29 @@ class Decoder:
         atom = self._parse_branched_atom()
         if atom:
             molecule.append(atom)
-            chain.append(atom)
         else:
-            return molecule_idx
+            return None
 
         char = self._stream.next
         if not char:
-            return molecule_idx
+            return atom
         if char in r"\/-=#$:":
             bond_type = self._parse_bond()
+            next_atom = self._parse_chain(molecule_idx)
 
-            length_before = len(chain)
-            molecule_idx = self._parse_chain(molecule_idx, chain)
-            length_after = len(chain)
-
-            if length_before == length_after:
+            if next_atom is None:
                 raise DecodeError(
                     "Expected atom after bond symbol", char, self._stream.pos
                 )
 
-            last_atom = chain.pop()
-            chain[-1].bond(last_atom, bond_type)
+            atom.bond(next_atom, bond_type)
         elif char == ".":
             next(self._stream)
-            molecule_idx = self._parse_chain()
+            self._parse_chain()
         else:
-            length_before = len(chain)
-            molecule_idx = self._parse_chain(molecule_idx, chain)
-            length_after = len(chain)
-
-            if length_before != length_after:
-                last_atom = chain.pop()
-                chain[-1].bond(last_atom)
-
-        return molecule_idx
+            next_atom = self._parse_chain(molecule_idx)
+            if next_atom is not None:
+                atom.bond(next_atom)
 
     def decode(self) -> DecodeResult:
         self._molecules = []
