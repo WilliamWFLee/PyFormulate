@@ -3,10 +3,11 @@
 
 from typing import List, Optional, Tuple
 
-from .models import Atom, BondType, Molecule
+from .models import Atom, BondType, Molecule, Element
 
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
 AROMATIC_ORGANIC = "bcnosp"
+AROMATIC = ("b", "c", "n", "o", "p", "s", "se", "as")
 CHAR_TO_BOND_TYPE = {
     "-": BondType.SINGLE,
     "=": BondType.DOUBLE,
@@ -112,11 +113,61 @@ class Decoder:
 
         return atom
 
-    def _parse_branched_atom(self) -> Optional[Atom]:
+    def _parse_isotope(self) -> int:
+        number = ""
+        while self._stream.next.isnumeric():
+            number += next(self._stream)
+
+        return int(number) if number else None
+
+    def _parse_symbol(self) -> Tuple[Optional[Element], Optional[bool]]:
+        symbol = next(self._stream)
+        if symbol == "*":
+            return Element.UNKNOWN, False
+        if self._stream.next.isalpha() and self._stream.next.islower():
+            symbol += next(self._stream)
+        if symbol in AROMATIC:
+            return Element[symbol.title()], True
+        if symbol in Element.__members__:
+            return Element[symbol], False
+        return None, None
+
+    def _parse_bracket_atom(self) -> Atom:
+        open_bracket = next(self._stream)
+        if open_bracket != "[":
+            return None
+
+        isotope = self._parse_isotope()
+        element, aromatic = self._parse_symbol()
+        if element is None:
+            raise DecodeError(
+                "Element symbol expected for bracket atom",
+                self._stream.next,
+                self._stream.pos,
+            )
+
+        atom = Atom(element, isotope=isotope, aromatic=aromatic)
+        close_bracket = next(self._stream)
+        if close_bracket != "]":
+            raise DecodeError(
+                "Unexpected character, expected ']'",
+                close_bracket,
+                self._stream.pos - 1,
+            )
+
+        return atom
+
+    def _parse_atom(self) -> Optional[Atom]:
+        atom = None
         if self._stream.next.isalpha():
             atom = self._parse_organic_atom()
-            return atom
-        return None
+        elif self._stream.next == "[":
+            atom = self._parse_bracket_atom()
+
+        return atom
+
+    def _parse_branched_atom(self) -> Optional[Atom]:
+        return self._parse_atom()
 
     def _parse_bond(self) -> Tuple[BondType]:
         bond = next(self._stream)
