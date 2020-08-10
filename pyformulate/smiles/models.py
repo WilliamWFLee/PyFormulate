@@ -10,6 +10,7 @@ class Element(Enum):
     Enumeration of the elements of the periodic table
     """
 
+    UNKNOWN = 0
     H = 1
     He = 2
     Li = 3
