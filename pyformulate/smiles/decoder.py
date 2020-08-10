@@ -45,7 +45,7 @@ class PeekableStream:
 
 class DecodeError(ValueError):
     def __init__(self, msg, snippet, pos):
-        error_message = "{}: characters {!r}, position {}".format(msg, snippet, pos)
+        error_message = "{}: {!r}, position {}".format(msg, snippet, pos)
         super().__init__(error_message)
 
 
