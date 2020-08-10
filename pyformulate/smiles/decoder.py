@@ -169,7 +169,7 @@ class Decoder:
 
         return molecule_idx, idx
 
-    def decode(self) -> Tuple[List[List[Atom]], str]:
+    def decode(self) -> DecodeResult:
         self._molecules = []
         idx = 0
 
