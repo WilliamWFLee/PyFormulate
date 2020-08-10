@@ -150,6 +150,8 @@ class ChiralClass(Enum):
     Enumeration for the tags used in SMILES for representing chiral stereochemistry
     """
 
+    _ANTICLOCKWISE = -1  # Indicates an atom requires further analysis
+    _CLOCKWISE = -2      # to determine if TH or AL
     TH1 = 1
     TH1 = 2
     AL1 = 3

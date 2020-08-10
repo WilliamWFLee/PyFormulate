@@ -3,7 +3,7 @@
 
 from typing import List, Optional, Tuple
 
-from .models import Atom, BondType, Element, Molecule
+from .models import Atom, BondType, ChiralClass, Element, Molecule
 
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
 AROMATIC_ORGANIC = "bcnosp"
@@ -129,6 +129,9 @@ class Decoder:
         if symbol in Element.__members__:
             return Element[symbol], False
         return None, None
+
+    def _parse_chiral(self) -> Optional[ChiralClass]:
+        pass
 
     def _parse_bracket_atom(self) -> Optional[Atom]:
         open_bracket = self._stream.next
