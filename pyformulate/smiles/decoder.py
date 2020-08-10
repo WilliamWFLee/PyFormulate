@@ -177,10 +177,21 @@ class Decoder:
 
         return ChiralClass._ANTICLOCKWISE
 
-    def _parse_bracket_atom(self) -> Optional[Atom]:
+    def _parse_hydrogen_count(self) -> int:
+        if self._stream.next != "H":
+            return 0
+        next(self._stream)
+
+        digit = self._parse_digit()
+        if digit is None:
+            return 1
+        return int(digit)
+
+    def _parse_bracket_atom(self) -> List[Atom]:
+        atoms = []
         open_bracket = self._stream.next
         if open_bracket != "[":
-            return None
+            return atoms
 
         next(self._stream)
         isotope = self._parse_isotope()
@@ -191,11 +202,22 @@ class Decoder:
                 self._stream.next,
                 self._stream.pos,
             )
-
         chiral_class = self._parse_chiral()
-        atom = Atom(
-            element, isotope=isotope, aromatic=aromatic, chiral_class=chiral_class
+        hydrogen_count = self._parse_hydrogen_count()
+        if hydrogen_count > 0 and element == Element.H:
+            raise DecodeError(
+                "Hydrogen count for bracket atom of hydrogen not permitted",
+                "H",
+                self._stream.pos - 2,
+            )
+
+        atoms.append(
+            Atom(element, isotope=isotope, aromatic=aromatic, chiral_class=chiral_class)
         )
+        for _ in range(hydrogen_count):
+            hydrogen = Atom(Element.H)
+            atoms.append(hydrogen)
+
         close_bracket = next(self._stream)
         if close_bracket != "]":
             raise DecodeError(
@@ -204,17 +226,18 @@ class Decoder:
                 self._stream.pos - 1,
             )
 
-        return atom
+        return atoms
 
-    def _parse_atom(self) -> Optional[Atom]:
-        atom = None
-        for atom_parser in (self._parse_bracket_atom, self._parse_organic_atom):
-            atom = atom_parser()
-            if atom is not None:
-                break
-        return atom
+    def _parse_atom(self) -> List[Atom]:
+        atoms = []
+        atoms.extend(self._parse_bracket_atom())
+        if atoms:
+            return atoms
 
-    def _parse_branched_atom(self) -> Optional[Atom]:
+        atoms.append(self._parse_organic_atom())
+        return atoms
+
+    def _parse_branched_atom(self) -> List[Atom]:
         return self._parse_atom()
 
     def _parse_bond(self) -> Optional[BondType]:
@@ -229,14 +252,14 @@ class Decoder:
             molecule_idx = len(self._molecules) - 1
 
         molecule = self._molecules[molecule_idx]
-        atom = self._parse_branched_atom()
-        if atom:
-            molecule.append(atom)
+        atoms = self._parse_branched_atom()
+        if atoms:
+            molecule.extend(atoms)
         else:
             return None
 
         if not self._stream.next:
-            return atom
+            return atoms[0]
 
         if self._stream.next == ".":
             next(self._stream)
@@ -255,12 +278,12 @@ class Decoder:
                     self._stream.pos,
                 )
 
-            atom.bond(next_atom, bond_type)
-            return
+            atoms[0].bond(next_atom, bond_type)
+            return None
 
         next_atom = self._parse_chain(molecule_idx)
         if next_atom is not None:
-            atom.bond(next_atom)
+            atoms[0].bond(next_atom)
 
     def decode(self) -> DecodeResult:
         self._molecules = []
