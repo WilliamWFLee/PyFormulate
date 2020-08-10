@@ -25,7 +25,7 @@ class PeekableStream:
         try:
             return self.value[self.pos]
         except IndexError:
-            return None
+            return ""
 
     @property
     def remainder(self):
