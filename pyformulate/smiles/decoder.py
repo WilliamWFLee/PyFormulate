@@ -246,6 +246,17 @@ class Decoder:
         count = digit + next_digit
         return int(count) if sign == "+" else -int(count)
 
+    def _parse_atom_class(self) -> int:
+        if self._stream.next != ":":
+            return 0
+        next(self._stream)
+        number = self._parse_number()
+        if number is None:
+            raise DecodeError(
+                "Expected atom class after ':'", self._stream.next, self._stream.pos
+            )
+        return number
+
     def _parse_bracket_atom(self) -> List[Atom]:
         atoms = []
         open_bracket = self._stream.next
@@ -270,6 +281,7 @@ class Decoder:
                 self._stream.pos - 2,
             )
         charge = self._parse_charge()
+        atom_class = self._parse_atom_class()
 
         atoms.append(
             Atom(
@@ -278,6 +290,7 @@ class Decoder:
                 aromatic=aromatic,
                 chiral_class=chiral_class,
                 charge=charge,
+                atom_class=atom_class,
             )
         )
         for _ in range(hydrogen_count):
