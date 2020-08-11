@@ -145,6 +145,9 @@ class BondType(Enum):
     TOP_BOTTOM = 7
 
 
+STANDARD_BONDS = (BondType.SINGLE, BondType.DOUBLE, BondType.TRIPLE, BondType.QUADRUPLE)
+
+
 class ChiralClass(Enum):
     """
     Enumeration for the tags used in SMILES for representing chiral stereochemistry
@@ -249,6 +252,19 @@ class Atom:
         self.aromatic = aromatic
         self.bonds = list(bonds) if bonds else []
         self.atom_class = atom_class
+
+    @property
+    def bond_count(self) -> int:
+        """
+        The number of bonds on this atom
+
+        :return: The number of bonds
+        :rtype: int
+        """
+        return sum(
+            (bond.type.value if bond.type in STANDARD_BONDS else 1)
+            for bond in self.bonds
+        )
 
     def bond(self, atom: "Atom", bond_type: BondType = BondType.SINGLE):
         if atom == self:
