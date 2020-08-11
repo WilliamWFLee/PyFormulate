@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import warnings
 from typing import List, Optional, Tuple
 
 from .models import Atom, BondType, ChiralClass, Element, Molecule
@@ -62,6 +63,7 @@ class DecodeWarning(Warning):
     """
     Class of all SMILES decode warnings
     """
+
     def __init__(self, msg, snippet, pos):
         warning_message = "{}: {!r}, position {}".format(msg, snippet, pos)
         super().__init__(warning_message)
@@ -206,6 +208,42 @@ class Decoder:
             return 1
         return int(digit)
 
+    def _parse_sign(self) -> int:
+        if self._stream.next not in ("+", "-"):
+            return None
+        return next(self._stream)
+
+    def _parse_charge(self) -> int:
+        sign = self._parse_sign()
+        if sign is None:
+            return 0
+        next_sym = self._parse_sign()
+        if next_sym is not None:
+            if next_sym == sign:
+                warnings.warn(
+                    DecodeWarning(
+                        f"Use of {2 * sign} is deprecated. Use {sign}2 instead",
+                        2 * sign,
+                        self._stream.pos - 2,
+                    )
+                )
+                return 2 if sign == "+" else -2
+            else:
+                raise DecodeError(
+                    f"Unexpected character following charge sign {sign}",
+                    next_sym,
+                    self._stream.pos - 1,
+                )
+
+        digit = self._parse_digit()
+        if digit is None:
+            return 1 if sign == "+" else -1
+        next_digit = self._parse_digit
+        if next_digit is None:
+            return int(digit) if sign == "+" else -int(digit)
+        count = digit + next_digit
+        return int(count) if sign == "+" else -int(count)
+
     def _parse_bracket_atom(self) -> List[Atom]:
         atoms = []
         open_bracket = self._stream.next
@@ -229,9 +267,16 @@ class Decoder:
                 "H",
                 self._stream.pos - 2,
             )
+        charge = self._parse_charge()
 
         atoms.append(
-            Atom(element, isotope=isotope, aromatic=aromatic, chiral_class=chiral_class)
+            Atom(
+                element,
+                isotope=isotope,
+                aromatic=aromatic,
+                chiral_class=chiral_class,
+                charge=charge,
+            )
         )
         for _ in range(hydrogen_count):
             hydrogen = Atom(Element.H)
