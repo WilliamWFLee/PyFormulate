@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
-from typing import Optional, Union, Sequence
+from typing import List, Optional, Sequence, Union
 
 
 class Element(Enum):
@@ -154,7 +154,7 @@ class ChiralClass(Enum):
     """
 
     _ANTICLOCKWISE = -1  # Indicates an atom requires further analysis
-    _CLOCKWISE = -2      # to determine chiral class
+    _CLOCKWISE = -2  # to determine chiral class
     TH1 = 1
     TH2 = 2
     AL1 = 3
@@ -328,8 +328,8 @@ class Molecule:
     Represents a molecule
     """
 
-    def __init__(self, atoms):
-        self.atoms = atoms
+    def __init__(self, atoms: Optional[List[Atom]]):
+        self.atoms = atoms if atoms is not None else []
 
     @property
     def bonds(self):
@@ -337,6 +337,44 @@ class Molecule:
         for atom in self.atoms:
             bonds.add(atom.bonds)
         return bonds
+
+    def new_atom(self, *args, **kwargs) -> Atom:
+        """
+        Creates a new atom in this molecule
+
+        The arguments are passed directly to the constructor for :class:`Atom`,
+        and the new atom is added to this molecule.
+
+        :return: The new atom
+        :rtype: Atom
+        """
+        atom = Atom(*args, **kwargs)
+        self.atoms.append(atom)
+        return atom
+
+    def new_bonded_atom(
+        self, bond_to: Atom, bond_type: BondType, *args, **kwargs
+    ) -> Atom:
+        """
+        Creates a new atom, and bonds it to the specified atom
+        existing in this molecule.
+
+        Accepts the specified atom, and the bond type as the only required arguments.
+        The rest of the arguments are passed directly to the constructor
+        for :class:`Atom`, and the new atom is bonded, then added to this molecule.
+
+        :param atom: The atom to bond to
+        :type atom: Atom
+        :param bond_type: The type of bond to bond the atoms with
+        :type bond_type: BondType
+        :return: The new atom
+        :rtype: Atom
+        """
+        if bond_to not in self.atoms:
+            raise BondingError("Specified atom does not exist in this molecule")
+        atom = self.new_atom(*args, **kwargs)
+        atom.bond(bond_to, bond_type)
+        return bond_to
 
     def elem_count(self, element: Element) -> int:
         """
