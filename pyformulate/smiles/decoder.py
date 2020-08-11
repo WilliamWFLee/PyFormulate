@@ -388,4 +388,12 @@ class Decoder:
 
 
 def loads(s: str) -> DecodeResult:
+    """
+    Parses a SMILES string, and produces a :class:`DecodeResult` object.
+
+    :param s: The SMILES string
+    :type s: str
+    :return: The result of decoding the SMILES
+    :rtype: DecodeResult
+    """
     return Decoder(s).decode()
