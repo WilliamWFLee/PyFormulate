@@ -21,7 +21,17 @@ def test_unknown_element():
 
 def test_invalid_elements():
     with pytest.raises(DecodeError):
-        assert loads("[]")  # Empty bracket atom
+        loads("[]")  # Empty bracket atom
+
+    # Invalid elements
+    for element in ("Pq", "Ny", "Zh", "Pi", "Nj", "Af"):
+        with pytest.raises(DecodeError):
+            loads(f"[{element}]")
+
+    # Invalid aromatics
+    for element in ("sd", "t", "v", "sd", "ap", "sg"):
+        with pytest.raises(DecodeError):
+            loads(f"[{element}]")
 
 
 def test_explicit_hydrogen_count():
