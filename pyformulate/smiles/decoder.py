@@ -296,6 +296,7 @@ class Decoder:
         )
         for _ in range(hydrogen_count):
             hydrogen = Atom(Element.H)
+            atoms[0].bond(hydrogen)
             atoms.append(hydrogen)
 
         close_bracket = next(self._stream)
