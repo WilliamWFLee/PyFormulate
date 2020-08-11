@@ -211,6 +211,14 @@ class ChiralClass(Enum):
     OH30 = 57
 
 
+class BondingError(Exception):
+    """
+    Class of exceptions raised for illegal bonds
+    """
+
+    pass
+
+
 class Atom:
     """
     Represents an atom, ion, etc.
@@ -244,10 +252,18 @@ class Atom:
 
     def bond(self, atom: "Atom", bond_type: BondType = BondType.SINGLE):
         if atom == self:
-            raise ValueError("Cannot bond atom to itself")
+            raise BondingError("Cannot bond atom to itself")
+        if self.bonded_to(atom):
+            raise BondingError("Atoms are already bonded")
         bond = Bond(bond_type, self, atom)
         for atm in (self, atom):
             atm.bonds.append(bond)
+
+    def bonded_to(self, atom: "Atom"):
+        for bond in self.bonds:
+            if atom in bond.atoms:
+                return True
+        return False
 
     def __str__(self):
         return "{0.isotope}{0.element.name}".format(self)
