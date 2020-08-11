@@ -225,6 +225,7 @@ class Atom:
         chiral_class: Optional[ChiralClass] = None,
         aromatic: bool = False,
         bonds: Sequence["Bond"] = None,
+        atom_class: int = 0,
     ):
         if isinstance(element, str):
             try:
@@ -239,6 +240,7 @@ class Atom:
         self.chiral_class = chiral_class
         self.aromatic = aromatic
         self.bonds = list(bonds) if bonds else []
+        self.atom_class = atom_class
 
     def bond(self, atom: "Atom", bond_type: BondType = BondType.SINGLE):
         if atom == self:
