@@ -58,6 +58,15 @@ class DecodeError(ValueError):
         super().__init__(error_message)
 
 
+class DecodeWarning(Warning):
+    """
+    Class of all SMILES decode warnings
+    """
+    def __init__(self, msg, snippet, pos):
+        warning_message = "{}: {!r}, position {}".format(msg, snippet, pos)
+        super().__init__(warning_message)
+
+
 class DecodeResult:
     """
     Represents the result of decoding a SMILES string
