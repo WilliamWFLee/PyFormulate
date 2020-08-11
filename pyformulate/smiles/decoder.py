@@ -122,12 +122,14 @@ class Decoder:
                 break
         return atom
 
-    def _parse_isotope(self) -> Optional[int]:
+    def _parse_number(self) -> Optional[int]:
         number = ""
         while self._stream.next.isnumeric():
             number += next(self._stream)
-
         return int(number) if number else None
+
+    def _parse_isotope(self) -> Optional[int]:
+        return self._parse_number()
 
     def _parse_symbol(self) -> Tuple[Optional[Element], Optional[bool]]:
         symbol = self._stream.next
