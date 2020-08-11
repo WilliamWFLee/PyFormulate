@@ -404,11 +404,10 @@ class Decoder:
                     self._stream.pos,
                 )
             atoms[0].bond(next_atom, bond_type)
-            return None
-
-        next_atom = self._parse_chain(molecule_idx)
-        if next_atom is not None:
-            atoms[0].bond(next_atom)
+        else:
+            next_atom = self._parse_chain(molecule_idx)
+            if next_atom is not None:
+                atoms[0].bond(next_atom)
         return atoms[0]
 
     def decode(self) -> DecodeResult:
