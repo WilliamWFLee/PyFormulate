@@ -18,6 +18,7 @@ CHAR_TO_BOND_TYPE = {
     "/": BondType.BOTTOM_TOP,
     "\\": BondType.TOP_BOTTOM,
 }
+BOND_TYPE_TO_CHAR = {v: k for k, v in CHAR_TO_BOND_TYPE.items()}
 
 
 class PeekableStream:
@@ -318,14 +319,63 @@ class Decoder:
             atoms.append(organic_atom)
         return atoms
 
-    def _parse_branched_atom(self) -> List[Atom]:
-        return self._parse_atom()
-
     def _parse_bond(self) -> Optional[BondType]:
         bond_char = self._stream.next
         if bond_char in CHAR_TO_BOND_TYPE:
             return CHAR_TO_BOND_TYPE[next(self._stream)]
         return None
+
+    def _parse_ring_bond(self) -> Tuple[BondType, int]:
+        bond_type = self._parse_bond()
+        digit = self._parse_digit()
+        if digit is not None:
+            return bond_type, int(digit)
+        if self._stream.next == "%":
+            next(self._stream)
+            digit = self._parse_digit()
+            if digit is None:
+                raise DecodeError(
+                    "Expected digit after '%' for ring number",
+                    self._stream.next,
+                    self._stream.pos,
+                )
+            next_digit = self._parse_digit()
+            if next_digit is None:
+                raise DecodeError(
+                    "Expected two-digit number after '%'",
+                    self._stream.next,
+                    self._stream.pos,
+                )
+            return bond_type, int(digit + next_digit)
+        return bond_type, None
+
+    def _parse_branched_atom(self) -> Tuple[List[Atom], BondType]:
+        atoms = self._parse_atom()
+        while True:
+            bond_type, rnum = self._parse_ring_bond()
+            if rnum is None:
+                break
+            if rnum in self._rnums:
+                other_atom, other_bond_type = self._rnums[rnum]
+                if (
+                    bond_type is not None
+                    and other_bond_type is not None
+                    and bond_type != other_bond_type
+                ):
+                    raise DecodeError(
+                        (
+                            f"Mismatched bond type for rnum {rnum}, "
+                            f"expected {BOND_TYPE_TO_CHAR[other_bond_type]}"
+                        ),
+                        BOND_TYPE_TO_CHAR[bond_type],
+                        self._stream.pos,
+                    )
+                bond_type = bond_type if bond_type is not None else other_bond_type
+                atoms[0].bond(other_atom, bond_type)
+                del self._rnums[rnum]
+            else:
+                self._rnums[rnum] = (atoms[0], bond_type)
+        return atoms, bond_type
 
     def _parse_chain(self, molecule_idx: Optional[int] = None) -> Atom:
         if molecule_idx is None:
@@ -333,14 +383,11 @@ class Decoder:
             molecule_idx = len(self._molecules) - 1
 
         molecule = self._molecules[molecule_idx]
-        atoms = self._parse_branched_atom()
+        atoms, bond_type = self._parse_branched_atom()
         if atoms:
             molecule.extend(atoms)
         else:
             return None
-
-        if not self._stream.next:
-            return atoms[0]
 
         if self._stream.next == ".":
             next(self._stream)
@@ -348,8 +395,6 @@ class Decoder:
             if not next_atom:
                 raise DecodeError("Expected chain after dot", ".", self._stream.pos)
             return None
-
-        bond_type = self._parse_bond()
         if bond_type is not None:
             next_atom = self._parse_chain(molecule_idx)
             if next_atom is None:
@@ -358,16 +403,17 @@ class Decoder:
                     self._stream.next,
                     self._stream.pos,
                 )
-
             atoms[0].bond(next_atom, bond_type)
             return None
 
         next_atom = self._parse_chain(molecule_idx)
         if next_atom is not None:
             atoms[0].bond(next_atom)
+        return atoms[0]
 
     def decode(self) -> DecodeResult:
         self._molecules = []
+        self._rnums = {}
         if self._stream.next not in " \t\r\n":
             try:
                 self._parse_chain()
@@ -381,6 +427,15 @@ class Decoder:
                     )
             except StopIteration:
                 pass
+            if self._rnums:
+                raise DecodeError(
+                    (
+                        "Unexpected end-of-input with unmatched rnums "
+                        + ", ".join(str(k) for k in self._rnums.keys())
+                    ),
+                    self._stream.next,
+                    self._stream.pos,
+                )
 
         return DecodeResult(
             [Molecule(molecule) for molecule in self._molecules], self._stream.remainder
