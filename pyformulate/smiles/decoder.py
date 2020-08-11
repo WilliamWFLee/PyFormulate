@@ -315,7 +315,7 @@ class Decoder:
 
         organic_atom = self._parse_organic_atom()
         if organic_atom is not None:
-            atoms.append()
+            atoms.append(organic_atom)
         return atoms
 
     def _parse_branched_atom(self) -> List[Atom]:
