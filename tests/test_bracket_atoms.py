@@ -4,7 +4,7 @@
 import pytest
 
 from pyformulate.smiles import loads
-from pyformulate.smiles.decoder import DecodeError
+from pyformulate.smiles.decoder import DecodeError, DecodeWarning
 from pyformulate.smiles.models import Element
 
 
@@ -54,3 +54,25 @@ def test_implicit_no_hydrogen_count():
 def test_illegal_hydrogen_count():
     with pytest.raises(DecodeError):
         loads("[HH1]")
+
+
+def test_no_charge():
+    assert loads("[Cl]").molecules[0].atoms[0].charge == 0
+
+
+def test_single_charge():
+    assert loads("[H+]").molecules[0].atoms[0].charge == 1
+    assert loads("[Cl-]").molecules[0].atoms[0].charge == -1
+
+
+def test_double_charge():
+    with pytest.warns(DecodeWarning):
+        assert loads("[Ca++]").molecules[0].atoms[0].charge == 2
+        assert loads("[O--]").molecules[0].atoms[0].charge == -2
+
+
+def test_multiple_charge():
+    assert loads("[Cu+3]").molecules[0].atoms[0].charge == 3
+    assert loads("[Ca+2]").molecules[0].atoms[0].charge == 2
+    assert loads("[Cr+6]").molecules[0].atoms[0].charge == 6
+    assert loads("[S-2]").molecules[0].atoms[0].charge == -2
