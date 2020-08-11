@@ -238,7 +238,7 @@ class Decoder:
         digit = self._parse_digit()
         if digit is None:
             return 1 if sign == "+" else -1
-        next_digit = self._parse_digit
+        next_digit = self._parse_digit()
         if next_digit is None:
             return int(digit) if sign == "+" else -int(digit)
         count = digit + next_digit
