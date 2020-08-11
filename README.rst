@@ -8,9 +8,9 @@ To-do list
 
 - [-] Grammar
 
-  - [-] Atoms
+  - [x] Atoms
 
-    - [-] Bracket Atoms
+    - [x] Bracket Atoms
     - [x] Aliphatic Organic Atoms
     - [x] Aromatic Organic Atoms
 
@@ -23,9 +23,9 @@ To-do list
     - [-] Trigonal bipyramidal
     - [-] Octohedral
 
-  - [-] Hydrogen count
-  - [-] Charge
-  - [ ] Atom class
+  - [x] Hydrogen count
+  - [x] Charge
+  - [x] Atom class
   - [-] Bonds
 
     - [x] Bond symbols
