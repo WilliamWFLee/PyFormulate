@@ -266,6 +266,16 @@ class Atom:
             for bond in self.bonds
         )
 
+    @property
+    def valency(self) -> int:
+        """
+        The valency of this atom. This is the number of bonds added to the charge
+
+        :return: The valency
+        :rtype: int
+        """
+        return self.bond_count + self.charge
+
     def bond(self, atom: "Atom", bond_type: BondType = BondType.SINGLE):
         if atom == self:
             raise BondingError("Cannot bond atom to itself")
