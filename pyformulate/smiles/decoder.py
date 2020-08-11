@@ -19,6 +19,20 @@ CHAR_TO_BOND_TYPE = {
     "\\": BondType.TOP_BOTTOM,
 }
 BOND_TYPE_TO_CHAR = {v: k for k, v in CHAR_TO_BOND_TYPE.items()}
+VALENCIES = {
+    Element.B: (3,),
+    Element.C: (4,),
+    Element.N: (3, 5),
+    Element.O: (2,),
+    Element.P: (3, 5),
+    Element.S: (2, 4, 6),
+    Element.F: (1,),
+    Element.Cl: (1,),
+    Element.Br: (1,),
+    Element.I: (1,),
+    Element.At: (1,),
+    Element.Ts: (1,),
+}
 
 
 class PeekableStream:
@@ -121,6 +135,8 @@ class Decoder:
             atom = atom_parser()
             if atom is not None:
                 break
+        if atom is not None:
+            atom._organic = True  # For implicit hydrogens
         return atom
 
     def _parse_number(self) -> Optional[int]:
@@ -411,6 +427,25 @@ class Decoder:
                 atoms[0].bond(next_atom)
         return atoms[0]
 
+    def _add_implicit_hydrogens(self, molecule: Molecule):
+        for atom in molecule.atoms:
+            if (
+                atom.element in VALENCIES
+                and getattr(atom, "_organic", False)
+                and atom.valency <= max(VALENCIES[atom.element])
+            ):
+                for valency in VALENCIES[atom.element]:
+                    valency_diff = valency - atom.valency
+                    if valency_diff > 0:
+                        for _ in range(valency_diff):
+                            hydrogen = Atom(Element.H)
+                            atom.bond(hydrogen)
+                            molecule.atoms.append(hydrogen)
+                        break
+                    elif valency_diff == 0:
+                        break
+                del atom._organic
+
     def decode(self) -> DecodeResult:
         self._molecules = []
         self._rnums = {}
@@ -436,10 +471,13 @@ class Decoder:
                     self._stream.next,
                     self._stream.pos,
                 )
+        molecules = [Molecule(molecule) for molecule in self._molecules]
+        del self._molecules
 
-        return DecodeResult(
-            [Molecule(molecule) for molecule in self._molecules], self._stream.remainder
-        )
+        for molecule in molecules:
+            self._add_implicit_hydrogens(molecule)
+
+        return DecodeResult(molecules, self._stream.remainder)
 
 
 def loads(s: str) -> DecodeResult:
