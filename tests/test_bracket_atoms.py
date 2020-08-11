@@ -43,6 +43,14 @@ def test_implicit_hydrogen_count():
     assert loads("[ClH]").molecules[0].elem_count(Element.H) == 1
 
 
+def test_explicit_no_hydrogen_count():
+    assert loads("[ClH0]").molecules[0].elem_count(Element.H) == 0
+
+
+def test_implicit_no_hydrogen_count():
+    assert loads("[Cl]").molecules[0].elem_count(Element.H) == 0
+
+
 def test_illegal_hydrogen_count():
     with pytest.raises(DecodeError):
         loads("[HH1]")
