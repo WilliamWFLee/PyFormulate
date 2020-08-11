@@ -33,7 +33,8 @@ To-do list
 
   - [-] Chains
 
-    - [ ] Branches
     - [-] Branched atoms
+      
+      - [ ] Branches
 
   - [x] Terminator
