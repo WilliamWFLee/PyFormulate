@@ -76,3 +76,17 @@ def test_multiple_charge():
     assert loads("[Ca+2]").molecules[0].atoms[0].charge == 2
     assert loads("[Cr+6]").molecules[0].atoms[0].charge == 6
     assert loads("[S-2]").molecules[0].atoms[0].charge == -2
+
+
+def test_isotope():
+    assert loads("[13CH4]").molecules[0].atoms[0].isotope == 13
+    assert loads("[2H+]").molecules[0].atoms[0].isotope == 2
+    assert loads("[238U]").molecules[0].atoms[0].isotope == 238
+
+
+def test_trailing_zeroes_isotope():
+    assert loads("[002CH4]").molecules[0].atoms[0].isotope == 2
+
+
+def test_zero_isotope():
+    assert loads("[0Ca]").molecules[0].atoms[0].isotope == 0
