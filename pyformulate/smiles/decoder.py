@@ -347,7 +347,7 @@ class Decoder:
             next_atom = self._parse_chain()
             if not next_atom:
                 raise DecodeError("Expected chain after dot", ".", self._stream.pos)
-            return
+            return None
 
         bond_type = self._parse_bond()
         if bond_type is not None:
