@@ -6,7 +6,7 @@ A library for parsing SMILES (simplified molecular-input line-entry system) stri
 To-do list
 ----------
 
-- [-] Grammar
+- [x] Syntax
 
   - [x] Atoms
 
@@ -14,27 +14,55 @@ To-do list
     - [x] Aliphatic Organic Atoms
     - [x] Aromatic Organic Atoms
 
-  - [-] Chirality
+  - [x] Chirality
 
-    - [-] Tetrahedral
+    - [x] Tetrahedral
     - [x] Cis-trans
-    - [-] Tetrahedral allene-like
-    - [-] Square-planar
-    - [-] Trigonal bipyramidal
-    - [-] Octohedral
+    - [x] Tetrahedral allene-like
+    - [x] Square-planar
+    - [x] Trigonal bipyramidal
+    - [x] Octohedral
 
   - [x] Hydrogen count
   - [x] Charge
   - [x] Atom class
-  - [-] Bonds
+  - [x] Bonds
 
     - [x] Bond symbols
-    - [ ] Ring bonds
+    - [x] Ring bonds
 
-  - [-] Chains
+  - [x] Chains
 
-    - [-] Branched atoms
+    - [x] Branched atoms
       
-      - [ ] Branches
+      - [x] Branches
 
   - [x] Terminator
+
+- [-] Semantics
+
+  - [x] Elements
+
+    - [x] Valid bracket elements
+    - [x] Valid bracket aromatics
+    - [x] Valid organic aliphatics
+    - [x] Valid organic aromatics
+
+  - [x] Organic subset
+
+    - [x] Implicit hydrogen count
+
+  - [x] Chirality
+
+    - [x] Valid chiral class
+    - [ ] Interpreting @ and @@ to the appropriate exact class
+
+  - [x] Hydrogen count
+
+    - [x] Illegal hydrogen count for hydrogen
+
+  - [ ] Aromatics
+
+    - [ ] Valid aromatic rings
+    - [ ] Determining bonding between aromatic atoms
+    - [ ] Adding hydrogens to organic aromatic atoms
