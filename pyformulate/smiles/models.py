@@ -422,6 +422,19 @@ class Molecule:
         """
         return sum(1 for atom in self.atoms if atom.element == element)
 
+    def get_atoms(self, elements: Union[Element, Sequence[Element]]) -> List[Atom]:
+        """
+        Returns atoms in this molecule of a given element/elements
+
+        :param element: [description]
+        :type element: Element
+        :return: [description]
+        :rtype: List[Atom]
+        """
+        if isinstance(elements, Element):
+            elements = (elements,)
+        return [atom for atom in self.atoms if atom.element in elements]
+
     def __iter__(self) -> Iterator[Atom]:
         """
         Iterates over the atoms of the molecule
