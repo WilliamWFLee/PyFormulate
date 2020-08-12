@@ -392,7 +392,7 @@ class Molecule:
             raise BondingError("Specified atom does not exist in this molecule")
         atom = self.new_atom(*args, **kwargs)
         atom.bond(bond_to, bond_type)
-        return bond_to
+        return atom
 
     def bond(self, atom: Atom, other_atom: Atom, bond_type: Optional[BondType] = None):
         """
