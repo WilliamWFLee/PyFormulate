@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
-from typing import List, Optional, Sequence, Union
+from typing import Iterator, List, Optional, Sequence, Union
 
 
 class Element(Enum):
@@ -422,16 +422,21 @@ class Molecule:
         """
         return sum(1 for atom in self.atoms if atom.element == element)
 
-    def get_atoms(self, elements: Union[Element, Sequence[Element]]) -> List[Atom]:
+    def get_atoms(
+        self, elements: Optional[Union[Element, Sequence[Element]]] = None
+    ) -> List[Atom]:
         """
-        Returns atoms in this molecule of a given element/elements
+        Returns atoms in this molecule of a given element/elements,
+        or all elements as a list if no elements are specified
 
         :param element: [description]
         :type element: Element
         :return: [description]
         :rtype: List[Atom]
         """
-        if isinstance(elements, Element):
+        if elements is None:
+            elements = Element
+        elif isinstance(elements, Element):
             elements = (elements,)
         return [atom for atom in self.atoms if atom.element in elements]
 
