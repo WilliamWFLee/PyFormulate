@@ -274,11 +274,10 @@ class Decoder:
             )
         return number
 
-    def _parse_bracket_atom(self) -> List[Atom]:
-        atoms = []
+    def _parse_bracket_atom(self) -> Tuple[Optional[Atom], int]:
         open_bracket = self._stream.next
         if open_bracket != "[":
-            return atoms
+            return None, 0
 
         next(self._stream)
         isotope = self._parse_isotope()
@@ -300,20 +299,14 @@ class Decoder:
         charge = self._parse_charge()
         atom_class = self._parse_atom_class()
 
-        atoms.append(
-            Atom(
-                element,
-                isotope=isotope,
-                aromatic=aromatic,
-                chiral_class=chiral_class,
-                charge=charge,
-                atom_class=atom_class,
-            )
+        atom = Atom(
+            element,
+            isotope=isotope,
+            aromatic=aromatic,
+            chiral_class=chiral_class,
+            charge=charge,
+            atom_class=atom_class,
         )
-        for _ in range(hydrogen_count):
-            hydrogen = Atom(Element.H)
-            atoms[0].bond(hydrogen)
-            atoms.append(hydrogen)
 
         close_bracket = next(self._stream)
         if close_bracket != "]":
@@ -323,18 +316,17 @@ class Decoder:
                 self._stream.pos - 1,
             )
 
-        return atoms
+        return atom, hydrogen_count
 
-    def _parse_atom(self) -> List[Atom]:
-        atoms = []
-        atoms.extend(self._parse_bracket_atom())
-        if atoms:
-            return atoms
+    def _parse_atom(self) -> Tuple[Optional[Atom], int]:
+        atom, hydrogen_count = self._parse_bracket_atom()
+        if atom:
+            return atom, hydrogen_count
 
         organic_atom = self._parse_organic_atom()
         if organic_atom is not None:
-            atoms.append(organic_atom)
-        return atoms
+            return organic_atom, 0
+        return None, 0
 
     def _parse_bond(self) -> Optional[BondType]:
         bond_char = self._stream.next
@@ -366,8 +358,8 @@ class Decoder:
             return bond_type, int(digit + next_digit)
         return bond_type, None
 
-    def _parse_branched_atom(self) -> Tuple[List[Atom], BondType]:
-        atoms = self._parse_atom()
+    def _parse_branched_atom(self) -> Tuple[List[Atom], int, BondType]:
+        atom, hydrogen_count = self._parse_atom()
         while True:
             bond_type, rnum = self._parse_ring_bond()
             if rnum is None:
@@ -388,21 +380,23 @@ class Decoder:
                         self._stream.pos,
                     )
                 bond_type = bond_type if bond_type is not None else other_bond_type
-                atoms[0].bond(other_atom, bond_type)
+                atom.bond(other_atom, bond_type)
                 del self._rnums[rnum]
             else:
-                self._rnums[rnum] = (atoms[0], bond_type)
-        return atoms, bond_type
+                self._rnums[rnum] = (atom, bond_type)
+        return atom, hydrogen_count, bond_type
 
     def _parse_chain(self, molecule_idx: Optional[int] = None) -> Atom:
         if molecule_idx is None:
-            self._molecules.append([])
+            self._molecules.append(Molecule())
             molecule_idx = len(self._molecules) - 1
 
         molecule = self._molecules[molecule_idx]
-        atoms, bond_type = self._parse_branched_atom()
-        if atoms:
-            molecule.extend(atoms)
+        atom, hydrogen_count, bond_type = self._parse_branched_atom()
+        if atom:
+            molecule.add(atom)
+            for _ in range(hydrogen_count):
+                molecule.new_bonded_atom(atom, bond_type, Element.H)
         else:
             return None
 
@@ -420,15 +414,15 @@ class Decoder:
                     self._stream.next,
                     self._stream.pos,
                 )
-            atoms[0].bond(next_atom, bond_type)
+            molecule.bond(atom, next_atom, bond_type)
         else:
             next_atom = self._parse_chain(molecule_idx)
             if next_atom is not None:
-                atoms[0].bond(next_atom)
-        return atoms[0]
+                molecule.bond(atom, next_atom)
+        return atom
 
     def _add_implicit_hydrogens(self, molecule: Molecule):
-        for atom in molecule.atoms:
+        for atom in molecule:
             if (
                 atom.element in VALENCIES
                 and getattr(atom, "_organic", False)
@@ -438,9 +432,7 @@ class Decoder:
                     valency_diff = valency - atom.valency
                     if valency_diff > 0:
                         for _ in range(valency_diff):
-                            hydrogen = Atom(Element.H)
-                            atom.bond(hydrogen)
-                            molecule.atoms.append(hydrogen)
+                            molecule.new_bonded_atom(atom, element=Element.H)
                         break
                     elif valency_diff == 0:
                         break
@@ -471,13 +463,13 @@ class Decoder:
                     self._stream.next,
                     self._stream.pos,
                 )
-        molecules = [Molecule(molecule) for molecule in self._molecules]
-        del self._molecules
 
-        for molecule in molecules:
+        for molecule in self._molecules:
             self._add_implicit_hydrogens(molecule)
-
-        return DecodeResult(molecules, self._stream.remainder)
+        try:
+            return DecodeResult(self._molecules, self._stream.remainder)
+        finally:
+            del self._molecules
 
 
 def loads(s: str) -> DecodeResult:
