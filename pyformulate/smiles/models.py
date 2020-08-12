@@ -426,4 +426,4 @@ class Molecule:
         """
         Iterates over the atoms of the molecule
         """
-        return iter(self.atoms)
+        return iter(self.atoms.copy())
