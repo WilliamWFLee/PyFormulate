@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
-from typing import Iterator, List, Optional, Sequence, Union
+from typing import Dict, Iterator, List, Optional, Sequence, Union
 
 
 class Element(Enum):
@@ -422,6 +422,21 @@ class Molecule:
         """
         return sum(1 for atom in self.atoms if atom.element == element)
 
+    def all_elem_counts(self) -> Dict[Element, int]:
+        """
+        Returns a dictionary of the count of each element in this molecule,
+        if there are atoms of that element.
+
+        :return: A dictionary mapping element to element count
+        :rtype: Dict[Element, int]
+        """
+        counts = {}
+        for atom in self.atoms:
+            counts.setdefault(atom.element, 0)
+            counts[atom.element] += 1
+
+        return counts
+
     def get_atoms(
         self, elements: Optional[Union[Element, Sequence[Element]]] = None
     ) -> List[Atom]:
@@ -445,3 +460,22 @@ class Molecule:
         Iterates over the atoms of the molecule
         """
         return iter(self.atoms.copy())
+
+    def __str__(self):
+        sort_order = [
+            Element.C,
+            Element.H,
+        ]
+        counts = {
+            k: v
+            for k, v in sorted(
+                self.all_elem_counts().items(),
+                key=lambda x: (
+                    sort_order.index(x[0]) if x[0] in sort_order else len(sort_order)
+                ),
+            )
+        }
+        return "".join(
+            f"{element.name}{count if count > 1 else ''}"
+            for element, count in counts.items()
+        )
