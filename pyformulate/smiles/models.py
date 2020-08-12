@@ -338,6 +338,22 @@ class Molecule:
             bonds.add(atom.bonds)
         return bonds
 
+    def add(self, atom: Atom, added_ok=False):
+        """
+        Adds an atom to this molecule, without any bonding.
+
+        Raises :class:`ValueError`, unless `added_ok` is set to :data:`True`,
+        if the atom to be added has already been added to this molecule.
+
+        :param atom: The atom to add
+        :type atom: Atom
+        :param added_ok: Whether to ignore the atom already being in this molecule
+        :type added_ok: bool
+        """
+        if atom in self.atoms and not added_ok:
+            raise ValueError("Atom already exists in this molecule")
+        self.atoms.append(atom)
+
     def new_atom(self, *args, **kwargs) -> Atom:
         """
         Creates a new atom in this molecule
