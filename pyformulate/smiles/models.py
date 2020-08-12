@@ -328,8 +328,8 @@ class Molecule:
     Represents a molecule
     """
 
-    def __init__(self, atoms: Optional[List[Atom]]):
-        self.atoms = atoms if atoms is not None else []
+    def __init__(self, atoms: Optional[List[Atom]] = None):
+        self.atoms = set(atoms) if atoms is not None else set()
 
     @property
     def bonds(self):
@@ -352,7 +352,7 @@ class Molecule:
         """
         if atom in self.atoms and not added_ok:
             raise ValueError("Atom already exists in this molecule")
-        self.atoms.append(atom)
+        self.atoms.add(atom)
 
     def new_atom(self, *args, **kwargs) -> Atom:
         """
@@ -365,7 +365,7 @@ class Molecule:
         :rtype: Atom
         """
         atom = Atom(*args, **kwargs)
-        self.atoms.append(atom)
+        self.atoms.add(atom)
         return atom
 
     def new_bonded_atom(
