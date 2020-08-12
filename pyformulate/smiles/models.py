@@ -475,7 +475,14 @@ class Molecule:
                 ),
             )
         }
-        return "".join(
+        s = "".join(
             f"{element.name}{count if count > 1 else ''}"
             for element, count in counts.items()
         )
+        charge = sum(atom.charge for atom in self.atoms)
+        if charge:
+            s = "[{}]{}{}".format(
+                s, abs(charge) if abs(charge > 1) else "", "+" if charge > 0 else "-"
+            )
+
+        return s
