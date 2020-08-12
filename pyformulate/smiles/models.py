@@ -371,7 +371,7 @@ class Molecule:
         return atom
 
     def new_bonded_atom(
-        self, bond_to: Atom, bond_type: BondType, *args, **kwargs
+        self, bond_to: Atom, bond_type: Optional[BondType] = None, *args, **kwargs
     ) -> Atom:
         """
         Creates a new atom, and bonds it to the specified atom
