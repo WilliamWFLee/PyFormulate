@@ -276,11 +276,13 @@ class Atom:
         """
         return self.bond_count + self.charge
 
-    def bond(self, atom: "Atom", bond_type: BondType = BondType.SINGLE):
+    def bond(self, atom: "Atom", bond_type: Optional[BondType] = None):
         if atom == self:
             raise BondingError("Cannot bond atom to itself")
         if self.bonded_to(atom):
             raise BondingError("Atoms are already bonded")
+        if bond_type is None:
+            bond_type = BondType.SINGLE
         bond = Bond(bond_type, self, atom)
         for atm in (self, atom):
             atm.bonds.append(bond)
