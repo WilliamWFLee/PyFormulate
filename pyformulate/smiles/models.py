@@ -421,3 +421,9 @@ class Molecule:
         :rtype: int
         """
         return sum(1 for atom in self.atoms if atom.element == element)
+
+    def __iter__(self) -> Iterator[Atom]:
+        """
+        Iterates over the atoms of the molecule
+        """
+        return iter(self.atoms)
