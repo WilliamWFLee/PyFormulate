@@ -394,6 +394,23 @@ class Molecule:
         atom.bond(bond_to, bond_type)
         return bond_to
 
+    def bond(self, atom: Atom, other_atom: Atom, bond_type: Optional[BondType] = None):
+        """
+        Bonds two atoms together, one of which must exist in this molecule.
+        Raises :class:`ValueError` neither exist in this molecule.
+
+        :param atom: The atom to bond
+        :type atom: Atom
+        :param other_atom: The other atom to bond
+        :type other_atom: Atom
+        :param bond_type: The bond_type
+        """
+        if atom not in self.atoms and other_atom not in self.atoms:
+            raise ValueError("Neither atom exists in this molecule")
+        self.atoms.add(atom)
+        self.atoms.add(other_atom)
+        atom.bond(other_atom, bond_type)
+
     def elem_count(self, element: Element) -> int:
         """
         Returns the number of atoms of the specified element
