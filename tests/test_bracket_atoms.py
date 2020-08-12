@@ -12,11 +12,11 @@ def test_known_elements():
     for elem in Element:
         if elem == Element.UNKNOWN:
             continue
-        assert loads(f"[{elem.name}]").molecules[0].atoms[0].element == elem
+        assert len(loads(f"[{elem.name}]").molecules[0].get_atoms(elem)) == 1
 
 
 def test_unknown_element():
-    assert loads("[*]").molecules[0].atoms[0].element == Element.UNKNOWN
+    assert len(loads("[*]").molecules[0].get_atoms(Element.UNKNOWN)) == 1
 
 
 def test_invalid_elements():
@@ -57,36 +57,36 @@ def test_illegal_hydrogen_count():
 
 
 def test_no_charge():
-    assert loads("[Cl]").molecules[0].atoms[0].charge == 0
+    assert loads("[Cl]").molecules[0].get_atoms()[0].charge == 0
 
 
 def test_single_charge():
-    assert loads("[H+]").molecules[0].atoms[0].charge == 1
-    assert loads("[Cl-]").molecules[0].atoms[0].charge == -1
+    assert loads("[H+]").molecules[0].get_atoms()[0].charge == 1
+    assert loads("[Cl-]").molecules[0].get_atoms()[0].charge == -1
 
 
 def test_double_charge():
     with pytest.warns(DecodeWarning):
-        assert loads("[Ca++]").molecules[0].atoms[0].charge == 2
-        assert loads("[O--]").molecules[0].atoms[0].charge == -2
+        assert loads("[Ca++]").molecules[0].get_atoms()[0].charge == 2
+        assert loads("[O--]").molecules[0].get_atoms()[0].charge == -2
 
 
 def test_multiple_charge():
-    assert loads("[Cu+3]").molecules[0].atoms[0].charge == 3
-    assert loads("[Ca+2]").molecules[0].atoms[0].charge == 2
-    assert loads("[Cr+6]").molecules[0].atoms[0].charge == 6
-    assert loads("[S-2]").molecules[0].atoms[0].charge == -2
+    assert loads("[Cu+3]").molecules[0].get_atoms()[0].charge == 3
+    assert loads("[Ca+2]").molecules[0].get_atoms()[0].charge == 2
+    assert loads("[Cr+6]").molecules[0].get_atoms()[0].charge == 6
+    assert loads("[S-2]").molecules[0].get_atoms()[0].charge == -2
 
 
 def test_isotope():
-    assert loads("[13CH4]").molecules[0].atoms[0].isotope == 13
-    assert loads("[2H+]").molecules[0].atoms[0].isotope == 2
-    assert loads("[238U]").molecules[0].atoms[0].isotope == 238
+    assert loads("[13CH4]").molecules[0].get_atoms(Element.C)[0].isotope == 13
+    assert loads("[2H+]").molecules[0].get_atoms()[0].isotope == 2
+    assert loads("[238U]").molecules[0].get_atoms()[0].isotope == 238
 
 
 def test_trailing_zeroes_isotope():
-    assert loads("[002CH4]").molecules[0].atoms[0].isotope == 2
+    assert loads("[002CH4]").molecules[0].get_atoms(Element.C)[0].isotope == 2
 
 
 def test_zero_isotope():
-    assert loads("[0Ca]").molecules[0].atoms[0].isotope == 0
+    assert loads("[0Ca]").molecules[0].get_atoms()[0].isotope == 0
