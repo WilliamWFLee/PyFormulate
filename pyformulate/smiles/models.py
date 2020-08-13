@@ -471,7 +471,7 @@ class Molecule:
             for k, v in sorted(
                 self.all_elem_counts().items(),
                 key=lambda x: (
-                    sort_order.index(x[0]) if x[0] in sort_order else len(sort_order)
+                    str(sort_order.index(x[0])) if x[0] in sort_order else x[0].name
                 ),
             )
         }
