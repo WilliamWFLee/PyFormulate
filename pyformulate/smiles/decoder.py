@@ -358,7 +358,34 @@ class Decoder:
             return bond_type, int(digit + next_digit)
         return bond_type, None
 
-    def _parse_branched_atom(self) -> Tuple[List[Atom], int, BondType]:
+    def _parse_branch(
+        self, molecule_idx: int
+    ) -> Optional[Tuple[Optional[Atom], Optional[BondType]]]:
+        if self._stream.next != "(":
+            return None
+        next(self._stream)
+
+        atom = None
+        bond_type = self._parse_bond()
+        if self._stream.next != ".":
+            if bond_type is None:
+                bond_type = BondType.SINGLE
+            atom = self._parse_chain(molecule_idx)
+        else:
+            next(self._stream)
+            atom = self._parse_chain()
+        if atom is None:
+            raise DecodeError(
+                "Expected chain within branch", self._stream.next, self._stream.pos
+            )
+        if self._stream.next != ")":
+            raise DecodeError(
+                "Expected ')' to close branch", self._stream.next, self._stream.pos
+            )
+        next(self._stream)
+        return atom, bond_type
+
+    def _parse_branched_atom(self, molecule_idx: int) -> Tuple[Atom, int, BondType]:
         atom, hydrogen_count = self._parse_atom()
         while True:
             bond_type, rnum = self._parse_ring_bond()
@@ -384,15 +411,34 @@ class Decoder:
                 del self._rnums[rnum]
             else:
                 self._rnums[rnum] = (atom, bond_type)
+        branches = False
+        bond_pos = self._stream.pos - 1
+        while True:
+            result = self._parse_branch(molecule_idx)
+            if result is None:
+                break
+            if bond_type is not None:
+                raise DecodeError(
+                    "Unexpected bond symbol before branch",
+                    BOND_TYPE_TO_CHAR[bond_type],
+                    bond_pos,
+                )
+            branches = True
+            next_atom, next_atom_bond_type = result
+            if next_atom is not None and next_atom_bond_type is not None:
+                atom.bond(next_atom, next_atom_bond_type)
+
+        if branches:
+            bond_type = self._parse_bond()
         return atom, hydrogen_count, bond_type
 
-    def _parse_chain(self, molecule_idx: Optional[int] = None) -> Atom:
+    def _parse_chain(self, molecule_idx: Optional[int] = None) -> [Atom, BondType]:
         if molecule_idx is None:
             self._molecules.append(Molecule())
             molecule_idx = len(self._molecules) - 1
 
         molecule = self._molecules[molecule_idx]
-        atom, hydrogen_count, bond_type = self._parse_branched_atom()
+        atom, hydrogen_count, bond_type = self._parse_branched_atom(molecule_idx)
         if atom:
             molecule.add(atom)
             for _ in range(hydrogen_count):
