@@ -121,7 +121,7 @@ class Decoder:
         if (
             next_char.isalpha()
             and next_char.islower()
-            and symbol + next_char in Element.__members__
+            and symbol + next_char in ALIPHATIC_ORGANIC
         ):
             symbol += next(self._stream)
         if symbol in ALIPHATIC_ORGANIC:
