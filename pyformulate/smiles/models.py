@@ -217,6 +217,8 @@ class ChiralClass(Enum):
 class BondingError(Exception):
     """
     Class of exceptions raised for illegal bonds
+
+    Inherits directly from :class:`Exception`
     """
 
     pass
@@ -225,6 +227,42 @@ class BondingError(Exception):
 class Atom:
     """
     Represents an atom, ion, etc.
+
+    .. attribute:: element
+
+        The element of the atom
+
+        :type: Element
+
+    .. attribute:: isotope
+
+        The isotope of the element, as its nucleon number
+
+        :type: int
+
+    .. attribute:: charge
+
+        The charge of the atom
+
+        :type: int
+
+    .. attribute:: chiral_class
+
+        The chiral class of the atom, according to the SMILES specification
+
+        :type: ChiralClass
+
+    .. attribute:: bonds
+
+        The bonds of the atom
+
+        :type: List[Atom]
+
+    .. attribute:: atom_class
+
+        The atom class of the atom, as defined by the SMILES specification
+
+        :type: int
     """
 
     def __init__(
