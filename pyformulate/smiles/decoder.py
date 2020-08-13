@@ -232,7 +232,7 @@ class Decoder:
             return 1
         return int(digit)
 
-    def _parse_sign(self) -> int:
+    def _parse_sign(self) -> str:
         if self._stream.next not in ("+", "-"):
             return None
         return next(self._stream)
