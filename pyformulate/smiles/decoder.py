@@ -102,7 +102,6 @@ class Decoder:
     def __init__(self, smiles: str):
         self.smiles = smiles
         self.species_list = []
-        self._stream = PeekableStream(smiles)
 
     def _parse_aromatic_organic(self) -> Optional[Atom]:
         atom = None
@@ -494,6 +493,7 @@ class Decoder:
     def decode(self) -> DecodeResult:
         self._molecules = []
         self._rnums = {}
+        self._stream = PeekableStream(self.smiles)
         if self._stream.next not in " \t\r\n":
             try:
                 self._parse_chain()
