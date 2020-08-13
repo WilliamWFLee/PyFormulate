@@ -437,7 +437,7 @@ class Decoder:
             bond_type = self._parse_bond()
         return atom, hydrogen_count, bond_type
 
-    def _parse_chain(self, molecule_idx: Optional[int] = None) -> [Atom, BondType]:
+    def _parse_chain(self, molecule_idx: Optional[int] = None) -> Atom:
         if molecule_idx is None:
             self._molecules.append(Molecule())
             molecule_idx = len(self._molecules) - 1
