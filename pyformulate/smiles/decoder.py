@@ -120,7 +120,11 @@ class Decoder:
 
         next(self._stream)
         next_char = self._stream.next
-        if next_char.isalpha() and next_char.islower():
+        if (
+            next_char.isalpha()
+            and next_char.islower()
+            and symbol + next_char in Element.__members__
+        ):
             symbol += next(self._stream)
         if symbol in ALIPHATIC_ORGANIC:
             return Atom(symbol)
@@ -163,7 +167,10 @@ class Decoder:
                 raise DecodeError("Unknown aromatic", symbol, self._stream.pos)
 
         next(self._stream)
-        if self._stream.next.islower():
+        if (
+            self._stream.next.islower()
+            and symbol + self._stream.next in Element.__members__
+        ):
             symbol += next(self._stream)
         if symbol in Element.__members__:
             return Element[symbol], False
