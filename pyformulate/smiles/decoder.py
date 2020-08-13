@@ -101,7 +101,6 @@ class Decoder:
 
     def __init__(self, smiles: str):
         self.smiles = smiles
-        self.species_list = []
 
     def _parse_aromatic_organic(self) -> Optional[Atom]:
         atom = None
