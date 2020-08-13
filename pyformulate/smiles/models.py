@@ -281,8 +281,6 @@ class Atom:
                 element = Element[element.title()]
             except KeyError:
                 raise ValueError(f"{element!r} is not a valid symbol") from None
-        if isotope is None:
-            isotope = element.value
         self.isotope = isotope
         self.element = element
         self.charge = charge
