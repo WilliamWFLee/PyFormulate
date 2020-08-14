@@ -414,30 +414,6 @@ class Molecule:
         self._atoms.add(atom)
         return atom
 
-    def new_bonded_atom(
-        self, bond_to: Atom, bond_type: Optional[BondType] = None, *args, **kwargs
-    ) -> Atom:
-        """
-        Creates a new atom, and bonds it to the specified atom
-        existing in this molecule.
-
-        Accepts the specified atom, and the bond type as the only required arguments.
-        The rest of the arguments are passed directly to the constructor
-        for :class:`Atom`, and the new atom is bonded, then added to this molecule.
-
-        :param atom: The atom to bond to
-        :type atom: Atom
-        :param bond_type: The type of bond to bond the atoms with
-        :type bond_type: BondType
-        :return: The new atom
-        :rtype: Atom
-        """
-        if bond_to not in self._atoms:
-            raise BondingError("Specified atom does not exist in this molecule")
-        atom = self.new_atom(*args, **kwargs)
-        atom.bond(bond_to, bond_type)
-        return atom
-
     def bond(self, atom: Atom, other_atom: Atom, bond_type: Optional[BondType] = None):
         """
         Bonds two atoms together, one of which must exist in this molecule.
