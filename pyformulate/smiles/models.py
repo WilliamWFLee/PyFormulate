@@ -317,6 +317,11 @@ class Atom:
             raise BondingError("Cannot bond atom to itself")
         if self.bonded_to(atom):
             raise BondingError("Atoms are already bonded")
+        if bond_type == BondType.AROMATIC and not (self.aromatic and atom.aromatic):
+            raise BondingError(
+                "Aromatic bond cannot be used between atoms "
+                "that are not both aromatic"
+            )
         if bond_type is None:
             if self.aromatic and atom.aromatic:
                 bond_type = BondType.AROMATIC
