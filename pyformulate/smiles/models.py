@@ -318,7 +318,10 @@ class Atom:
         if self.bonded_to(atom):
             raise BondingError("Atoms are already bonded")
         if bond_type is None:
-            bond_type = BondType.SINGLE
+            if self.aromatic and atom.aromatic:
+                bond_type = BondType.AROMATIC
+            else:
+                bond_type = BondType.SINGLE
         bond = Bond(bond_type, self, atom)
         for atm in (self, atom):
             atm.bonds.append(bond)
