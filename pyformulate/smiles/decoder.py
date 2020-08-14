@@ -468,9 +468,12 @@ class Decoder:
         next(self._stream)
         return atom, bond_type
 
-    def _parse_branched_atom(self, molecule: Molecule) -> Tuple[Atom, int, BondType]:
+    def _parse_branched_atom(
+        self, molecule: Molecule
+    ) -> Tuple[Optional[Atom], int, Optional[BondType]]:
         atom, hydrogen_count = self._parse_atom()
-
+        if atom is None:
+            return None, 0, None
         # Parses ring bond and standard bond
         while True:
             bond_type, rnum = self._parse_ring_bond()
