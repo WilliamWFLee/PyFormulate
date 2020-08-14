@@ -355,14 +355,14 @@ class Bond:
 
     def __init__(self, type_: BondType, *atoms: Atom):
         self.type = type_
-        self._atoms = atoms
+        self.atoms = atoms
 
     def __contains__(self, atom: Atom):
-        return atom in self._atoms
+        return atom in self.atoms
 
     def __str__(self):
         return "<Bond between {0} and {1} of type {2.name}>".format(
-            *self._atoms, self.type
+            *self.atoms, self.type
         )
 
     def __repr__(self):
