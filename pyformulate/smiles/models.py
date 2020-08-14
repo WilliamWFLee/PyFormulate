@@ -488,9 +488,9 @@ class Molecule:
         Returns atoms in this molecule of a given element/elements,
         or all elements as a list if no elements are specified
 
-        :param element: [description]
+        :param element: The element to search for
         :type element: Element
-        :return: [description]
+        :return: The list of atoms
         :rtype: List[Atom]
         """
         if elements is None:
