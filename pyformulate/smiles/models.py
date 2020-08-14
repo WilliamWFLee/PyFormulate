@@ -381,7 +381,7 @@ class Molecule:
     def bonds(self):
         bonds = set()
         for atom in self._atoms:
-            bonds.add(atom.bonds)
+            bonds.update(set(atom.bonds))
         return bonds
 
     def add(self, atom: Atom, added_ok=False):
