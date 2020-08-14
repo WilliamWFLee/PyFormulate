@@ -4,7 +4,7 @@
 import warnings
 from typing import List, Optional, Tuple
 
-from .models import Atom, BondType, ChiralClass, Element, Molecule
+from .models import Atom, BondType, ChiralClass, CisTransType, Element, Molecule
 
 # Defines the organic subset of elements
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
@@ -13,17 +13,20 @@ AROMATIC_ORGANIC = "bcnosp"
 # Defines the aromatics
 AROMATIC = ("b", "c", "n", "o", "p", "s", "se", "as")
 
-# A mapping from bond symbol to bond type and vice-versa
-CHAR_TO_BOND_TYPE = {
-    "-": BondType.SINGLE,
-    "=": BondType.DOUBLE,
-    "#": BondType.TRIPLE,
-    "$": BondType.QUADRUPLE,
-    ":": BondType.AROMATIC,
-    "/": BondType.BOTTOM_TOP,
-    "\\": BondType.TOP_BOTTOM,
+CHAR_TO_BOND_ORDER = {
+    "-": 1,
+    "=": 2,
+    "#": 3,
+    "$": 4,
+    ":": 1,
+    "/": 1,
+    "\\": 1,
 }
-BOND_TYPE_TO_CHAR = {v: k for k, v in CHAR_TO_BOND_TYPE.items()}
+
+CHAR_TO_CIS_TRANS = {
+    "\\": CisTransType.TOP_BOTTOM,
+    "/": CisTransType.BOTTOM_TOP,
+}
 
 # The "normal" valencies of atoms, as defined in SMILES
 VALENCIES = {
@@ -413,11 +416,15 @@ class Decoder:
 
     def _parse_bond(self) -> Optional[BondType]:
         bond_char = self._stream.next
-        if bond_char in CHAR_TO_BOND_TYPE:
-            return CHAR_TO_BOND_TYPE[next(self._stream)]
-        return None  # No bond
+        if bond_char not in CHAR_TO_BOND_ORDER:
+            return None
+        bond_order = CHAR_TO_BOND_ORDER[next(self._stream)]
+        aromatic = bond_char == ":"
+        cis_trans = CHAR_TO_CIS_TRANS.get(bond_char, None)
 
-    def _parse_ring_bond(self) -> Tuple[BondType, int]:
+        return BondType(bond_order, aromatic, cis_trans)
+
+    def _parse_ring_bond(self) -> Tuple[Optional[BondType], int]:
         bond_type = self._parse_bond()
         digit = self._parse_digit()
         if digit is not None:
@@ -452,7 +459,7 @@ class Decoder:
         bond_type = self._parse_bond()
         if self._stream.next != ".":  # Standard branch
             if bond_type is None:
-                bond_type = BondType.SINGLE
+                bond_type = BondType()
             atom = self._parse_chain(molecule)
         else:
             next(self._stream)
@@ -488,12 +495,7 @@ class Decoder:
                     and bond_type != other_bond_type
                 ):  # Ring bond types must match if both have specified it
                     raise DecodeError(
-                        (
-                            f"Mismatched bond type for rnum {rnum}, "
-                            f"expected {BOND_TYPE_TO_CHAR[other_bond_type]}"
-                        ),
-                        BOND_TYPE_TO_CHAR[bond_type],
-                        self._stream.pos,
+                        f"Mismatched bond type for rnum {rnum}", "", self._stream.pos,
                     )
                 bond_type = bond_type if bond_type is not None else other_bond_type
                 atom.bond(other_atom, bond_type)
@@ -509,7 +511,7 @@ class Decoder:
             if bond_type is not None:  # If bond symbol is encountered before branch
                 raise DecodeError(
                     "Unexpected bond symbol before branch",
-                    BOND_TYPE_TO_CHAR[bond_type],
+                    self._stream.value[bond_pos],
                     bond_pos,
                 )
             branches = True
@@ -533,7 +535,8 @@ class Decoder:
             molecule.add(atom)
             # Adds the hydrogens
             for _ in range(hydrogen_count):
-                molecule.new_bonded_atom(atom, bond_type, Element.H)
+                hydrogen = molecule.new_atom(Element.H)
+                molecule.bond(atom, hydrogen, bond_type)
         else:
             return None  # Signals end of chain
 
@@ -574,7 +577,8 @@ class Decoder:
                     if valency_diff > 0:
                         # If the current valency is lower than one of the valencies
                         for _ in range(valency_diff):
-                            molecule.new_bonded_atom(atom, element=Element.H)
+                            hydrogen = molecule.new_atom(Element.H)
+                            molecule.bond(atom, hydrogen)
                         break  # Ensures valency is always next-highest
                     elif valency_diff == 0:
                         break  # If the atom is already one of the valencies

@@ -131,21 +131,13 @@ class Element(Enum):
     Og = 118
 
 
-class BondType(Enum):
+class CisTransType(Enum):
     """
-    Bond type enumeration
+    Cis-trans classification of bond
     """
 
-    SINGLE = 1
-    DOUBLE = 2
-    TRIPLE = 3
-    QUADRUPLE = 4
-    AROMATIC = 5
-    BOTTOM_TOP = 6  # For cis-trans
-    TOP_BOTTOM = 7
-
-
-STANDARD_BONDS = (BondType.SINGLE, BondType.DOUBLE, BondType.TRIPLE, BondType.QUADRUPLE)
+    BOTTOM_TOP = 1
+    TOP_BOTTOM = 2
 
 
 class ChiralClass(Enum):
@@ -212,6 +204,57 @@ class ChiralClass(Enum):
     OH28 = 55
     OH29 = 56
     OH30 = 57
+
+
+class BondType:
+    """
+    Class for holding bond type information
+
+    .. attribute:: order
+
+        The order of the bond
+
+        :type: int
+
+    .. attribute:: aromatic
+
+        Whether the bond is aromatic
+
+        :type: bool
+
+    .. attribute:: cis_trans
+
+        The cis-trans classification of the bond, as per SMILES, if applicable
+
+        :type: Optional[CisTransType]
+    """
+
+    def __init__(
+        self,
+        order: int = 1,
+        aromatic: bool = False,
+        cis_trans: Optional[CisTransType] = None,
+    ):
+        self.order = order
+        self.aromatic = aromatic
+        self.cis_trans = cis_trans
+
+    def __iter__(self):
+        return iter((self.order, self.aromatic, self.cis_trans))
+
+    def __repr__(self):
+        return "{0.__name__}({1.order}, {1.aromatic}, {1.cis_trans})".format(
+            type(self), self
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return (
+            self.order == other.order
+            and self.aromatic == other.aromatic
+            and self.cis_trans == other.cis_trans
+        )
 
 
 class BondingError(Exception):
@@ -297,10 +340,7 @@ class Atom:
         :return: The number of bonds
         :rtype: int
         """
-        return sum(
-            (bond.type.value if bond.type in STANDARD_BONDS else 1)
-            for bond in self.bonds
-        )
+        return sum(bond.order for bond in self.bonds)
 
     @property
     def valency(self) -> int:
@@ -313,21 +353,7 @@ class Atom:
         return self.bond_count + self.charge
 
     def bond(self, atom: "Atom", bond_type: Optional[BondType] = None):
-        if atom == self:
-            raise BondingError("Cannot bond atom to itself")
-        if self.bonded_to(atom):
-            raise BondingError("Atoms are already bonded")
-        if bond_type == BondType.AROMATIC and not (self.aromatic and atom.aromatic):
-            raise BondingError(
-                "Aromatic bond cannot be used between atoms "
-                "that are not both aromatic"
-            )
-        if bond_type is None:
-            if self.aromatic and atom.aromatic:
-                bond_type = BondType.AROMATIC
-            else:
-                bond_type = BondType.SINGLE
-        bond = Bond(bond_type, self, atom)
+        bond = Bond(self, atom, bond_type)
         for atm in (self, atom):
             atm.bonds.append(bond)
 
@@ -338,7 +364,9 @@ class Atom:
         return False
 
     def __str__(self):
-        return "{0.isotope}{0.element.name}".format(self)
+        return "{0}{1}".format(
+            self.isotope if self.isotope is not None else "", self.element.name
+        )
 
     def __repr__(self):
         return (
@@ -351,18 +379,61 @@ class Atom:
 class Bond:
     """
     Represents a bond between two Atoms
+
+    The attributes of the :attr:`Bond.type` attribute can be accessed directly
+    from the :class:`Bond` object. For example,
+
+    >>> bond.type.order == bond.order
+    True
+
+    .. attribute:: atoms
+
+        A tuple of the atoms in the bond
+
+        :type: Tuple[Atom]
+
+    .. attribute:: type
+
+        The bond's type information
+
+        :type: BondType
     """
 
-    def __init__(self, type_: BondType, *atoms: Atom):
+    def __init__(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
+        """
+        Creates a new :class:`Bond` between two atoms
+
+        :param atom: One of the atoms to bond
+        :type atom: Atom
+        :param other_atom: The other atom to bond
+        :type other_atom: Atom
+        :param type_: The bond type, defaults to None
+        :type type_: Optional[BondType]
+        :raises BondingError: If the bond is illegal
+        """
+        if atom == other_atom:
+            raise BondingError("Cannot bond atom to itself")
+        if atom.bonded_to(other_atom):
+            raise BondingError("Atoms are already bonded")
+        if type_ is None:
+            type_ = BondType(1, False, None)
+        if type_.aromatic and not (atom.aromatic and other_atom.aromatic):
+            raise BondingError(
+                "Aromatic bond cannot be used between atoms "
+                "that are not both aromatic"
+            )
+        self.atoms = (atom, other_atom)
         self.type = type_
-        self.atoms = atoms
+
+    def __getattr__(self, key):
+        return getattr(self.type, key)
 
     def __contains__(self, atom: Atom):
         return atom in self.atoms
 
     def __str__(self):
-        return "<Bond between {0} and {1} of type {2.name}>".format(
-            *self.atoms, self.type
+        return "<Bond between {0} and {1} of order {2}>".format(
+            *self.atoms, self.type, self.order
         )
 
     def __repr__(self):
@@ -414,22 +485,22 @@ class Molecule:
         self._atoms.add(atom)
         return atom
 
-    def bond(self, atom: Atom, other_atom: Atom, bond_type: Optional[BondType] = None):
+    def bond(self, atom: Atom, other_atom: Atom, *args, **kwargs):
         """
         Bonds two atoms together, one of which must exist in this molecule.
-        Raises :class:`ValueError` neither exist in this molecule.
+
+        Takes two positional arguments for the two atoms to bond,
+        and the rest of the arguments are passed to :meth:`Atom.bond`.
 
         :param atom: The atom to bond
         :type atom: Atom
         :param other_atom: The other atom to bond
         :type other_atom: Atom
-        :param bond_type: The bond_type
+        :raises ValueError: If neither atom exists in this moleculee
         """
         if atom not in self._atoms and other_atom not in self._atoms:
             raise ValueError("Neither atom exists in this molecule")
-        self._atoms.add(atom)
-        self._atoms.add(other_atom)
-        atom.bond(other_atom, bond_type)
+        atom.bond(other_atom, *args, **kwargs)
 
     def elem_count(self, element: Element) -> int:
         """
@@ -493,7 +564,8 @@ class Molecule:
                 except AttributeError:
                     break
             else:
-                atoms.append(atom)
+                if atom.element in elements:
+                    atoms.append(atom)
 
         return atoms
 
