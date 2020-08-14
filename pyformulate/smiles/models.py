@@ -355,14 +355,14 @@ class Bond:
 
     def __init__(self, type_: BondType, *atoms: Atom):
         self.type = type_
-        self.atoms = atoms
+        self._atoms = atoms
 
     def __contains__(self, atom: Atom):
-        return atom in self.atoms
+        return atom in self._atoms
 
     def __str__(self):
         return "<Bond between {0} and {1} of type {2.name}>".format(
-            *self.atoms, self.type
+            *self._atoms, self.type
         )
 
     def __repr__(self):
@@ -375,12 +375,12 @@ class Molecule:
     """
 
     def __init__(self, atoms: Optional[List[Atom]] = None):
-        self.atoms = set(atoms) if atoms is not None else set()
+        self._atoms = set(atoms) if atoms is not None else set()
 
     @property
     def bonds(self):
         bonds = set()
-        for atom in self.atoms:
+        for atom in self._atoms:
             bonds.add(atom.bonds)
         return bonds
 
@@ -396,9 +396,9 @@ class Molecule:
         :param added_ok: Whether to ignore the atom already being in this molecule
         :type added_ok: bool
         """
-        if atom in self.atoms and not added_ok:
+        if atom in self._atoms and not added_ok:
             raise ValueError("Atom already exists in this molecule")
-        self.atoms.add(atom)
+        self._atoms.add(atom)
 
     def new_atom(self, *args, **kwargs) -> Atom:
         """
@@ -411,7 +411,7 @@ class Molecule:
         :rtype: Atom
         """
         atom = Atom(*args, **kwargs)
-        self.atoms.add(atom)
+        self._atoms.add(atom)
         return atom
 
     def new_bonded_atom(
@@ -432,7 +432,7 @@ class Molecule:
         :return: The new atom
         :rtype: Atom
         """
-        if bond_to not in self.atoms:
+        if bond_to not in self._atoms:
             raise BondingError("Specified atom does not exist in this molecule")
         atom = self.new_atom(*args, **kwargs)
         atom.bond(bond_to, bond_type)
@@ -449,10 +449,10 @@ class Molecule:
         :type other_atom: Atom
         :param bond_type: The bond_type
         """
-        if atom not in self.atoms and other_atom not in self.atoms:
+        if atom not in self._atoms and other_atom not in self._atoms:
             raise ValueError("Neither atom exists in this molecule")
-        self.atoms.add(atom)
-        self.atoms.add(other_atom)
+        self._atoms.add(atom)
+        self._atoms.add(other_atom)
         atom.bond(other_atom, bond_type)
 
     def elem_count(self, element: Element) -> int:
@@ -464,7 +464,7 @@ class Molecule:
         :return: The number of atoms of that element
         :rtype: int
         """
-        return sum(1 for atom in self.atoms if atom.element == element)
+        return sum(1 for atom in self._atoms if atom.element == element)
 
     def all_elem_counts(self) -> Dict[Element, int]:
         """
@@ -475,18 +475,29 @@ class Molecule:
         :rtype: Dict[Element, int]
         """
         counts = {}
-        for atom in self.atoms:
+        for atom in self._atoms:
             counts.setdefault(atom.element, 0)
             counts[atom.element] += 1
 
         return counts
 
-    def get_atoms(
-        self, elements: Optional[Union[Element, Sequence[Element]]] = None
+    def atoms(
+        self, elements: Optional[Union[Element, Sequence[Element]]] = None, **kwargs
     ) -> List[Atom]:
         """
-        Returns atoms in this molecule of a given element/elements,
-        or all elements as a list if no elements are specified
+        Returns atoms in this molecule with specified properties.
+
+        The sole positional argument is an :class:`Element`
+        or sequence of :class:`Element` to search for.
+
+        The remaining arguments must be keyword arguments,
+        that specify the desired value of attributes on an instance of :class:`Atom`.
+
+        Examples:
+        >>> molecule.atoms()  # All atoms
+        >>> molecule.atoms(Element.H)  # All hydrogen atoms
+        >>> molecule.atoms(aromatic=True)  # All aromatic atoms
+        >>> molecule.atoms(aromati=True)  # Mispelling of 'aromatic', returns empty list
 
         :param element: The element to search for
         :type element: Element
@@ -497,13 +508,24 @@ class Molecule:
             elements = Element
         elif isinstance(elements, Element):
             elements = (elements,)
-        return [atom for atom in self.atoms if atom.element in elements]
+        atoms = []
+        for atom in self._atoms:
+            for attr, value in kwargs.items():
+                try:
+                    if getattr(atom, attr) != value:
+                        break
+                except AttributeError:
+                    break
+            else:
+                atoms.append(atom)
+
+        return atoms
 
     def __iter__(self) -> Iterator[Atom]:
         """
         Iterates over the atoms of the molecule
         """
-        return iter(self.atoms.copy())
+        return iter(self._atoms.copy())
 
     def __str__(self):
         sort_order = [
@@ -523,7 +545,7 @@ class Molecule:
             f"{element.name}{count if count > 1 else ''}"
             for element, count in counts.items()
         )
-        charge = sum(atom.charge for atom in self.atoms)
+        charge = sum(atom.charge for atom in self._atoms)
         if charge:
             s = "[{}]{}{}".format(
                 s, abs(charge) if abs(charge > 1) else "", "+" if charge > 0 else "-"
