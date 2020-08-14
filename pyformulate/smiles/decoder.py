@@ -566,7 +566,8 @@ class Decoder:
                 and atom.valency <= max(VALENCIES[atom.element])
             ):
                 for valency in VALENCIES[atom.element]:
-                    valency_diff = valency - atom.valency
+                    # Aromatic atoms receive one fewer hydrogen
+                    valency_diff = valency - atom.valency - (1 if atom.aromatic else 0)
                     if valency_diff > 0:
                         # If the current valency is lower than one of the valencies
                         for _ in range(valency_diff):
