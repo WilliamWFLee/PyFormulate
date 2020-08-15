@@ -92,7 +92,9 @@ class DecodeError(ValueError):
     Inherits from :class:`ValueError`
     """
 
-    def __init__(self, msg, snippet, pos):
+    def __init__(
+        self, msg: str, snippet: Optional[str] = None, pos: Optional[int] = None
+    ):
         """
         Creates an instance of a :class:`DecodeError`.
 
@@ -101,12 +103,16 @@ class DecodeError(ValueError):
 
         :param msg: The error message
         :type msg: str
-        :param snippet: The character/phrase causing the error
-        :type snippet: str
-        :param pos: The position of the characters causing the error in the string
-        :type pos: int
+        :param snippet: The character/phrase causing the error, defaults to None
+        :type snippet: Optional[str]
+        :param pos: The position of the characters causing the error in the string, defaults to None
+        :type pos: Optional[int
         """
-        error_message = "{}: {!r}, position {}".format(msg, snippet, pos)
+        error_message = msg + (
+            f": {snippet!r}" + (f", position {pos}" if pos is not None else "")
+            if snippet is not None
+            else ""
+        )
         super().__init__(error_message)
 
 
