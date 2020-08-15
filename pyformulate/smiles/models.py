@@ -365,6 +365,14 @@ class Atom:
                 return True
         return False
 
+    def neighbours(self) -> List["Atom"]:
+        atoms = []
+        for bond in self.bonds:
+            other_atom = bond.atoms[0] if bond.atoms[1] == self else bond.atoms[1]
+            atoms.append(other_atom)
+
+        return atoms
+
     def __str__(self):
         return "{0}{1}".format(
             self.isotope if self.isotope is not None else "", self.element.name
