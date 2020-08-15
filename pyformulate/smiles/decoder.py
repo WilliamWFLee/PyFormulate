@@ -632,6 +632,7 @@ class Decoder:
         finally:
             # Clean up namespace
             del self._molecules
+            del self._stream
 
 
 def loads(s: str) -> DecodeResult:
