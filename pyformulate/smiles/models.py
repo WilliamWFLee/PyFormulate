@@ -333,11 +333,13 @@ class Atom:
         self.atom_class = atom_class
 
     @property
-    def bond_count(self) -> int:
+    def total_bond_order(self) -> int:
         """
-        The number of bonds on this atom
+        The sum of the orders of the bonds this atom is participating in.
+        For example, if a carbon atom has two double bonds,
+        then its total bond order is 4.
 
-        :return: The number of bonds
+        :return: The sum of the bond orders
         :rtype: int
         """
         return sum(bond.order for bond in self.bonds)
@@ -350,7 +352,7 @@ class Atom:
         :return: The valency
         :rtype: int
         """
-        return self.bond_count + self.charge
+        return self.total_bond_order + self.charge
 
     def bond(self, atom: "Atom", bond_type: Optional[BondType] = None):
         bond = Bond(self, atom, bond_type)
