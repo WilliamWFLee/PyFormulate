@@ -542,7 +542,7 @@ class Decoder:
             # Adds the hydrogens
             for _ in range(hydrogen_count):
                 hydrogen = molecule.new_atom(Element.H)
-                molecule.bond(atom, hydrogen, bond_type)
+                molecule.bond(atom, hydrogen)
         else:
             return None  # Signals end of chain
 
