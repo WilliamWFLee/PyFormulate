@@ -585,6 +585,19 @@ class Molecule:
 
         return atoms
 
+    def merge(self, *others: "Molecule"):
+        """
+        Merges other molecules with these molecule.
+
+        This has the effect of adding the other molecules' atoms to this molecule.
+
+        The other molecules are unchanged by this method
+        """
+        for other in others:
+            self._atoms = self._atoms.union(other._atoms)
+        for atom in self._atoms:
+            atom.molecule = self
+
     def __iter__(self) -> Iterator[Atom]:
         """
         Iterates over the atoms of the molecule
