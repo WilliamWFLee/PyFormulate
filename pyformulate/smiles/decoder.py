@@ -109,7 +109,8 @@ class DecodeError(ValueError):
         :type pos: Optional[int
         """
         error_message = msg + (
-            f": {snippet!r}" + (f", position {pos}" if pos is not None else "")
+            ": {!r}".format(snippet)
+            + (", position {}".format(pos) if pos is not None else "")
             if snippet is not None
             else ""
         )
@@ -331,7 +332,9 @@ class Decoder:
                 # Use of ++ and -- is deprecated
                 warnings.warn(
                     DecodeWarning(
-                        f"Use of {2 * sign} is deprecated. Use {sign}2 instead",
+                        "Use of {} is deprecated. Use {}2 instead".format(
+                            2 * sign, sign
+                        ),
                         2 * sign,
                         self._stream.pos - 2,
                     )
@@ -339,7 +342,7 @@ class Decoder:
                 return 2 if sign == "+" else -2
             else:
                 raise DecodeError(
-                    f"Unexpected character following charge sign {sign}",
+                    "Unexpected character following charge sign {}".format(sign),
                     next_sym,
                     self._stream.pos - 1,
                 )
@@ -504,7 +507,9 @@ class Decoder:
                     and bond_type != other_bond_type
                 ):  # Ring bond types must match if both have specified it
                     raise DecodeError(
-                        f"Mismatched bond type for rnum {rnum}", "", self._stream.pos,
+                        "Mismatched bond type for rnum {}".format(rnum),
+                        "",
+                        self._stream.pos,
                     )
                 bond_type = bond_type if bond_type is not None else other_bond_type
                 atom.bond(other_atom, bond_type)
@@ -630,7 +635,8 @@ class Decoder:
         double_bonds = self._determine_double_bonds(atoms, bonds)
         if double_bonds is None:
             raise DecodeError(
-                f"Failed to verify aromaticity of molecule with formula {molecule}"
+                "Failed to verify aromaticity of molecule "
+                "with formula {}".format(molecule)
             )
 
     def decode(self) -> DecodeResult:

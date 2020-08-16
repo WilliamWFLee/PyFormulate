@@ -12,7 +12,7 @@ def test_known_elements():
     for elem in Element:
         if elem == Element.UNKNOWN:
             continue
-        assert len(loads(f"[{elem.name}]").molecules[0].atoms(elem)) == 1
+        assert len(loads("[{0.name}]".format(elem)).molecules[0].atoms(elem)) == 1
 
 
 def test_unknown_element():
@@ -26,12 +26,12 @@ def test_invalid_elements():
     # Invalid elements
     for element in ("Pq", "Ny", "Zh", "Pi", "Nj", "Af"):
         with pytest.raises(DecodeError):
-            loads(f"[{element}]")
+            loads("[{}]".format(element))
 
     # Invalid aromatics
     for element in ("sd", "t", "v", "sd", "ap", "sg"):
         with pytest.raises(DecodeError):
-            loads(f"[{element}]")
+            loads("[{}]".format(element))
 
 
 def test_explicit_hydrogen_count():
