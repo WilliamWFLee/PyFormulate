@@ -484,6 +484,7 @@ class Molecule:
         """
         if atom in self._atoms and not added_ok:
             raise ValueError("Atom already exists in this molecule")
+        atom.molecule = self
         self._atoms.add(atom)
 
     def new_atom(self, *args, **kwargs) -> Atom:
@@ -497,7 +498,7 @@ class Molecule:
         :rtype: Atom
         """
         atom = Atom(*args, **kwargs)
-        self._atoms.add(atom)
+        self.add(atom)
         return atom
 
     def bond(self, atom: Atom, other_atom: Atom, *args, **kwargs):
