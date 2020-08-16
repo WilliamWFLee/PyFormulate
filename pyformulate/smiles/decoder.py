@@ -503,6 +503,9 @@ class Decoder:
                     )
                 bond_type = bond_type if bond_type is not None else other_bond_type
                 atom.bond(other_atom, bond_type)
+                if other_atom.molecule != molecule:
+                    self._molecules.remove(other_atom.molecule)
+                    molecule.merge(other_atom.molecule)
                 del self._rnums[rnum]  # Delete rnum for reuse
             else:  # Rnum not already encountered
                 self._rnums[rnum] = (atom, bond_type)
@@ -549,8 +552,7 @@ class Decoder:
             next_atom = self._parse_chain()
             if not next_atom:
                 raise DecodeError("Expected chain after dot", ".", self._stream.pos)
-            return None
-        if bond_type is not None:  # An atom is expected afterwards
+        elif bond_type is not None:  # An atom is expected afterwards
             next_atom = self._parse_chain(molecule)
             if next_atom is None:
                 raise DecodeError(
