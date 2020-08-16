@@ -70,11 +70,11 @@ To-do list
 
     - [x] Illegal hydrogen count for hydrogen
 
-  - [ ] Aromatics
+  - [-] Aromatics
 
     - [ ] Valid aromatic rings
-    - [ ] Determining bonding between aromatic atoms
-    - [ ] Adding hydrogens to organic aromatic atoms
+    - [-] Determining bonding between aromatic atoms
+    - [-] Adding hydrogens to organic aromatic atoms
 
 .. _`OpenSMILES specification`: https://opensmiles.org/opensmiles.html
 .. _`SMILES+`: https://github.com/IUPAC/IUPAC_SMILES_plus
