@@ -485,6 +485,11 @@ class Decoder:
         atom, hydrogen_count = self._parse_atom()
         if atom is None:
             return None, 0, None
+        molecule.add(atom)
+        # Adds the hydrogens
+        for _ in range(hydrogen_count):
+            hydrogen = molecule.new_atom(Element.H)
+            molecule.bond(atom, hydrogen)
         # Parses ring bond and standard bond
         while True:
             bond_type, rnum = self._parse_ring_bond()
@@ -538,13 +543,7 @@ class Decoder:
 
         # Parse an atom and its branches
         atom, hydrogen_count, bond_type = self._parse_branched_atom(molecule)
-        if atom:
-            molecule.add(atom)
-            # Adds the hydrogens
-            for _ in range(hydrogen_count):
-                hydrogen = molecule.new_atom(Element.H)
-                molecule.bond(atom, hydrogen)
-        else:
+        if atom is None:
             return None  # Signals end of chain
 
         if self._stream.next == ".":  # Disconnected molecule
