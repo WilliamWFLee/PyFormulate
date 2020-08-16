@@ -323,7 +323,7 @@ class Atom:
             try:
                 element = Element[element.title()]
             except KeyError:
-                raise ValueError("{!r} is not a valid symbol".format(element)) from None
+                raise ValueError(f"{element!r} is not a valid symbol") from None
         self.isotope = isotope
         self.element = element
         self.charge = charge
@@ -619,7 +619,7 @@ class Molecule:
             )
         }
         s = "".join(
-            "{}{}".format(element.name, count if count > 1 else "")
+            f"{element.name}{count if count > 1 else ''}"
             for element, count in counts.items()
         )
         charge = sum(atom.charge for atom in self._atoms)
