@@ -3,6 +3,15 @@ PyFormulate
 
 A library for parsing SMILES (simplified molecular-input line-entry system) strings, and displaying molecules.
 
+SMILES
+------
+
+PyFormulate follows the `OpenSMILES specification`_ in its parser. 
+
+Recently, IUPAC have adopted the OpenSMILES specification as the basis for a new standard called `SMILES+`_.
+At the time of writing, the SMILES+ specification is exactly the same as the OpenSMILES standard, however as SMILES+ develops,
+it may become the standard followed by PyFormulate.
+
 To-do list
 ----------
 
@@ -66,3 +75,6 @@ To-do list
     - [ ] Valid aromatic rings
     - [ ] Determining bonding between aromatic atoms
     - [ ] Adding hydrogens to organic aromatic atoms
+
+.. _`OpenSMILES specification`: https://opensmiles.org/opensmiles.html
+.. _`SMILES+`: https://github.com/IUPAC/IUPAC_SMILES_plus
