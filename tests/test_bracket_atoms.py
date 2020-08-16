@@ -90,3 +90,12 @@ def test_trailing_zeroes_isotope():
 
 def test_zero_isotope():
     assert loads("[0Ca]").molecules[0].atoms()[0].isotope == 0
+
+
+def test_explicit_atom_class():
+    assert loads("[CH4:2]").molecules[0].atoms(Element.C)[0].atom_class == 2
+    assert loads("[CH4:002]").molecules[0].atoms(Element.C)[0].atom_class == 2
+
+
+def test_implied_atom_class():
+    assert loads("[H]").molecules[0].atoms()[0].atom_class == 0  # Implies 0
