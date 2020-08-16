@@ -331,6 +331,7 @@ class Atom:
         self.aromatic = aromatic
         self.bonds = list(bonds) if bonds else []
         self.atom_class = atom_class
+        self.molecule = None
 
     @property
     def total_bond_order(self) -> int:
