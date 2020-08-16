@@ -4,7 +4,7 @@
 import warnings
 from typing import List, Optional, Tuple
 
-from .models import Atom, BondType, ChiralClass, CisTransType, Element, Molecule
+from .models import Atom, Bond, BondType, ChiralClass, CisTransType, Element, Molecule
 
 # Defines the organic subset of elements
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
@@ -464,8 +464,6 @@ class Decoder:
         atom = None
         bond_type = self._parse_bond()
         if self._stream.next != ".":  # Standard branch
-            if bond_type is None:
-                bond_type = BondType()
             atom = self._parse_chain(molecule)
         else:
             next(self._stream)
@@ -590,6 +588,50 @@ class Decoder:
                         break  # If the atom is already one of the valencies
                 del atom._organic  # Cleans the attribute from the atom
 
+    def _determine_double_bonds(
+        self,
+        atoms: List[Atom],
+        bonds: List[Bond],
+        double_bonds: Optional[List[Bond]] = None,
+    ) -> Optional[List[Bond]]:
+        # Finds a perfect matching for the graph given by the atoms and bonds
+        if double_bonds is None:
+            double_bonds = []
+        if not atoms:
+            return double_bonds
+        for bond in bonds:
+            proposed_double_bonds = self._determine_double_bonds(
+                list(filter(lambda atom: atom not in bond.atoms, atoms)),
+                list(filter(lambda b: b != bond, bonds)),
+                double_bonds,
+            )
+            if proposed_double_bonds is not None:
+                return proposed_double_bonds + [bond]
+        return None
+
+    def _kekulize(self, molecule: Molecule):
+        atoms = list(
+            filter(
+                lambda x: (
+                    x.aromatic
+                    and (
+                        x.valency not in VALENCIES[x.element]
+                        if x.element in VALENCIES
+                        else True
+                    )
+                ),
+                molecule.atoms(),
+            )
+        )
+        bonds = list(filter(lambda x: x.aromatic, molecule.bonds))
+        if not atoms and not bonds:
+            return
+        double_bonds = self._determine_double_bonds(atoms, bonds)
+        if double_bonds is None:
+            raise DecodeError(
+                f"Failed to verify aromaticity of molecule with formula {molecule}"
+            )
+
     def decode(self) -> DecodeResult:
         """
         Decode the SMILES string of this decoder.
@@ -633,6 +675,7 @@ class Decoder:
         # Adds implicit hydrogens to organic atoms
         for molecule in self._molecules:
             self._add_implicit_hydrogens(molecule)
+            self._kekulize(molecule)
         try:
             return DecodeResult(self._molecules, self._stream.remainder)
         finally:
