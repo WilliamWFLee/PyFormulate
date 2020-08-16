@@ -463,11 +463,11 @@ class Molecule:
         self._atoms = set(atoms) if atoms is not None else set()
 
     @property
-    def bonds(self):
+    def bonds(self) -> List[Bond]:
         bonds = set()
         for atom in self._atoms:
             bonds.update(set(atom.bonds))
-        return bonds
+        return list(bonds)
 
     def add(self, atom: Atom, added_ok=False):
         """
