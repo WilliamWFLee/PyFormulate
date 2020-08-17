@@ -4,45 +4,16 @@
 import warnings
 from typing import List, Optional, Tuple
 
-from .models import Atom, Bond, BondType, ChiralClass, CisTransType, Element, Molecule
-
-# Defines the organic subset of elements
-ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
-AROMATIC_ORGANIC = "bcnosp"
-
-# Defines the aromatics
-AROMATIC = ("b", "c", "n", "o", "p", "s", "se", "as")
-
-CHAR_TO_BOND_ORDER = {
-    "-": 1,
-    "=": 2,
-    "#": 3,
-    "$": 4,
-    ":": 1,
-    "/": 1,
-    "\\": 1,
-}
-
-CHAR_TO_CIS_TRANS = {
-    "\\": CisTransType.TOP_BOTTOM,
-    "/": CisTransType.BOTTOM_TOP,
-}
-
-# The "normal" valencies of atoms, as defined in SMILES
-VALENCIES = {
-    Element.B: (3,),
-    Element.C: (4,),
-    Element.N: (3, 5),
-    Element.O: (2,),
-    Element.P: (3, 5),
-    Element.S: (2, 4, 6),
-    Element.F: (1,),
-    Element.Cl: (1,),
-    Element.Br: (1,),
-    Element.I: (1,),
-    Element.At: (1,),
-    Element.Ts: (1,),
-}
+from ..models import Atom, Bond, BondType, Element, Molecule
+from .models import (
+    ALIPHATIC_ORGANIC,
+    AROMATIC,
+    AROMATIC_ORGANIC,
+    CHAR_TO_BOND_ORDER,
+    CHAR_TO_CIS_TRANS,
+    VALENCIES,
+    ChiralClass,
+)
 
 
 class PeekableStream:
