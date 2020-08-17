@@ -435,6 +435,8 @@ class Molecule:
     Represents a molecule
     """
 
+    atom_class = Atom
+
     def __init__(self, atoms: Optional[List[Atom]] = None):
         self._atoms = set(atoms) if atoms is not None else set()
 
@@ -472,7 +474,7 @@ class Molecule:
         :return: The new atom
         :rtype: Atom
         """
-        atom = Atom(*args, **kwargs)
+        atom = self.atom_class(*args, **kwargs)
         self.add(atom)
         return atom
 

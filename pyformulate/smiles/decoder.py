@@ -4,7 +4,7 @@
 import warnings
 from typing import List, Optional, Tuple
 
-from ..models import Atom, Bond, BondType, Element, Molecule
+from ..models import BondType, Element
 from .models import (
     ALIPHATIC_ORGANIC,
     AROMATIC,
@@ -12,7 +12,10 @@ from .models import (
     CHAR_TO_BOND_ORDER,
     CHAR_TO_CIS_TRANS,
     VALENCIES,
+    Atom,
+    Bond,
     ChiralClass,
+    Molecule,
 )
 
 

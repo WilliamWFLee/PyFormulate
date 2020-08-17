@@ -6,8 +6,10 @@ Models specific to SMILES interpretation
 """
 
 from enum import Enum
+from typing import List, Optional
 
-from ..models import CisTransType, Element
+from .. import models
+from ..models import CisTransType, Element, BondType, BondingError
 
 # Defines the organic subset of elements
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
@@ -113,3 +115,44 @@ class ChiralClass(Enum):
     OH28 = 55
     OH29 = 56
     OH30 = 57
+
+
+class Atom(models.Atom):
+    def __init__(
+        self,
+        element: Element,
+        *,
+        isotope: Optional[int] = None,
+        charge: int = 0,
+        aromatic: bool = False,
+        bonds: Optional[List["Bond"]] = None,
+        atom_class: int = 0,
+        chiral_class: Optional[ChiralClass] = None,
+    ):
+        super().__init__(
+            element,
+            isotope=isotope,
+            charge=charge,
+            aromatic=aromatic,
+            bonds=bonds,
+            atom_class=atom_class,
+            chiral_class=chiral_class,
+        )
+
+    def __repr__(self):
+        return (
+            "{0.__qualname__}(element={1.element}, isotope={1.isotope}, "
+            "charge={1.charge}, chiral_class={1.chiral_class}, "
+            "aromatic={1.aromatic}, atom_class={1.atom_class})"
+        ).format(type(self), self)
+
+
+class Bond(models.Bond):
+    def __init__(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
+        if type_.aromatic and not (atom.aromatic and other_atom.aromatic):
+            raise BondingError("Cannot use aromatic between non-aromatic atoms")
+        super().__init__(atom, other_atom, type_=type_)
+
+
+class Molecule(models.Molecule):
+    atom_class = Atom
