@@ -259,7 +259,6 @@ class Atom:
         *,
         isotope: Optional[int] = None,
         charge: int = 0,
-        aromatic: bool = False,
         bonds: Sequence["Bond"] = None,
         **kwargs,
     ):
