@@ -5,9 +5,9 @@ import string
 
 import pytest
 
+from pyformulate.models import Element
 from pyformulate.smiles import loads
 from pyformulate.smiles.decoder import ALIPHATIC_ORGANIC, DecodeError
-from pyformulate.smiles.models import Element
 
 
 def test_valid_aliphatics():
