@@ -6,7 +6,7 @@ Generic chemistry models, such as elements, atoms, etc.
 """
 
 from enum import Enum
-from typing import Union, Optional, Sequence, List, Dict, Iterator
+from typing import Dict, Iterator, List, Optional, Sequence, Union
 
 
 class Element(Enum):
@@ -254,7 +254,24 @@ class Atom:
         charge: int = 0,
         aromatic: bool = False,
         bonds: Sequence["Bond"] = None,
+        **kwargs,
     ):
+        """
+        Instantiates a new instance of Atom. The defined attributes are shown below.
+        Any other attributes of the instance may be provided as keyword arguments.
+        PyFormulate will not use them in any way, but they may be accessed normally
+        for your purposes.
+
+        :param element: The element of the atom
+        :type element: Union[str, Element]
+        :param isotope: The isotope of the element, as its nucleon number, defaults to None
+        :type isotope: Optional[int]
+        :param charge: The charge of the atom, defaults to 0
+        :type charge: int
+        :param bonds: Bonds associated with this atom, defaults to None
+        :type bonds: Sequence[Bond]
+        :raises ValueError: If element is a string, and it does not represent a valid chemical element
+        """
         if isinstance(element, str):
             try:
                 element = Element[element.title()]
@@ -263,9 +280,9 @@ class Atom:
         self.isotope = isotope
         self.element = element
         self.charge = charge
-        self.aromatic = aromatic
         self.bonds = list(bonds) if bonds else []
         self.molecule = None
+        self.__dict__.update(**kwargs)
 
     @property
     def total_bond_order(self) -> int:
@@ -315,9 +332,7 @@ class Atom:
 
     def __repr__(self):
         return (
-            "{0.__name__}(element={1.element}, isotope={1.isotope}, "
-            "charge={1.charge}, chiral_class={1.chiral_class}, "
-            "aromatic={1.aromatic}, atom_class={1.atom_class})"
+            "{0.__name__}(element={1.element}, isotope={1.isotope}, charge={1.charge})"
         ).format(type(self), self)
 
 
