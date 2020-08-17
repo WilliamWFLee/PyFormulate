@@ -5,7 +5,7 @@ import pytest
 
 from pyformulate.smiles import loads
 from pyformulate.smiles.decoder import DecodeError, DecodeWarning
-from pyformulate.smiles.models import Element
+from pyformulate.models import Element
 
 
 def test_known_elements():
