@@ -2,7 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
+pyformulate.models
+
 Generic chemistry models, such as elements, atoms, etc.
+
+These models may be extended by specific parsers
+to provide additional data/functionality, according to the language specification.
+For example, atoms parsed from SMILES strings will indicate which atoms
+are part of aromatic cycles.
 """
 
 from enum import Enum
@@ -259,8 +266,6 @@ class Atom:
         """
         Instantiates a new instance of Atom. The defined attributes are shown below.
         Any other attributes of the instance may be provided as keyword arguments.
-        PyFormulate will not use them in any way, but they may be accessed normally
-        for your purposes.
 
         :param element: The element of the atom
         :type element: Union[str, Element]
@@ -307,17 +312,39 @@ class Atom:
         return self.total_bond_order + self.charge
 
     def bond(self, atom: "Atom", bond_type: Optional[BondType] = None):
+        """
+        Bonds an atom to this atom
+
+        :param atom: The atom to bond to
+        :type atom: Atom
+        :param bond_type: The bond type, defaults to None
+        :type bond_type: Optional[BondType]
+        """
         bond = Bond(self, atom, bond_type)
         for atm in (self, atom):
             atm.bonds.append(bond)
 
-    def bonded_to(self, atom: "Atom"):
+    def bonded_to(self, atom: "Atom") -> bool:
+        """
+        Whether an atom is bonded to this atom
+
+        :param atom: The other atom
+        :type atom: Atom
+        :return: :data:`True` if the atom is bonded to this one, otherwise :data:`False`
+        :rtype: bool
+        """
         for bond in self.bonds:
             if atom in bond.atoms:
                 return True
         return False
 
     def neighbours(self) -> List["Atom"]:
+        """
+        Returns the neighbours of this atom, i.e. the atoms bonded to this atom.
+
+        :return: The atoms bonded to this atom
+        :rtype: List[Atom]
+        """
         atoms = []
         for bond in self.bonds:
             other_atom = bond.atoms[0] if bond.atoms[1] == self else bond.atoms[1]
