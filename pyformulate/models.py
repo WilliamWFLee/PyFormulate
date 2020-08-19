@@ -326,10 +326,7 @@ class Atom:
         :return: :data:`True` if the atom is bonded to this one, otherwise :data:`False`
         :rtype: bool
         """
-        for bond in self.bonds:
-            if atom in bond.atoms:
-                return True
-        return False
+        return self.bonds[atom] is not None
 
     def neighbours(self) -> List["Atom"]:
         """
