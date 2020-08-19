@@ -313,16 +313,15 @@ class Atom:
 
     def bond(self, atom: "Atom", bond_type: Optional[BondType] = None):
         """
-        Bonds an atom to this atom
+        Bonds an atom to this atom. Both atoms must exist in a molecule
 
         :param atom: The atom to bond to
         :type atom: Atom
         :param bond_type: The bond type, defaults to None
         :type bond_type: Optional[BondType]
+        :raises BondingError: If this atom is not associated with a molecule
         """
-        bond = Bond(self, atom, bond_type)
-        for atm in (self, atom):
-            atm.bonds.append(bond)
+        self.molecule.bond(self, atom, bond_type)
 
     def bonded_to(self, atom: "Atom") -> bool:
         """
