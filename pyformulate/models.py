@@ -474,8 +474,10 @@ class Molecule:
         """
         if type_ is None:
             type_ = BondType(1, False, None)
-        if atom not in self._atoms or other_atom not in self._atoms:
-            raise ValueError("Both atoms must exists in this molecule")
+        if self.molecule is None or atom.molecule is None:
+            raise BondingError("Bonding must occur within a molecule")
+        if self.molecule != atom.molecule:
+            raise BondingError("Both atoms must be associated with the same molecule")
         self._graph[atom][other_atom] = type_
         self._graph[other_atom][atom] = type_
 
