@@ -12,6 +12,7 @@ For example, atoms parsed from SMILES strings will indicate which atoms
 are part of aromatic cycles.
 """
 
+from collections import defaultdict
 from enum import Enum
 from typing import Dict, Iterator, List, Optional, Sequence, Union
 
@@ -430,6 +431,7 @@ class Molecule:
 
     def __init__(self, atoms: Optional[List[Atom]] = None):
         self._atoms = set(atoms) if atoms is not None else set()
+        self._graph = defaultdict(lambda: defaultdict(lambda: None))
 
     @property
     def bonds(self) -> List[Bond]:
