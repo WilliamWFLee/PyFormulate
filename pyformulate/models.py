@@ -293,7 +293,7 @@ class Atom:
         :return: The sum of the bond orders
         :rtype: int
         """
-        return sum(bond.order for bond in self.bonds)
+        return sum(bond_type.order for bond_type in self.bonds.values())
 
     @property
     def valency(self) -> int:
