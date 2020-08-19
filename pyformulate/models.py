@@ -471,22 +471,24 @@ class Molecule:
         self.add(atom)
         return atom
 
-    def bond(self, atom: Atom, other_atom: Atom, *args, **kwargs):
+    def bond(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
         """
-        Bonds two atoms together, one of which must exist in this molecule.
-
-        Takes two positional arguments for the two atoms to bond,
-        and the rest of the arguments are passed to :meth:`Atom.bond`.
+        Bonds two atoms together, both of which must exist on this molecule
 
         :param atom: The atom to bond
         :type atom: Atom
         :param other_atom: The other atom to bond
         :type other_atom: Atom
+        :param type_: The bond type, defaults to None
+        :type type_: Optional[BondType]
         :raises ValueError: If neither atom exists in this moleculee
         """
-        if atom not in self._atoms and other_atom not in self._atoms:
-            raise ValueError("Neither atom exists in this molecule")
-        atom.bond(other_atom, *args, **kwargs)
+        if type_ is None:
+            type_ = BondType(1, False, None)
+        if atom not in self._atoms or other_atom not in self._atoms:
+            raise ValueError("Both atoms must exists in this molecule")
+        self._graph[atom][other_atom] = type_
+        self._graph[other_atom][atom] = type_
 
     def elem_count(self, element: Element) -> int:
         """
