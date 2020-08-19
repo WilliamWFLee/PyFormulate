@@ -281,7 +281,7 @@ class Atom:
 
     @property
     def bonds(self) -> Dict["Atom", BondType]:
-        return self.molecule._graph[self]
+        return self.molecule.bonds[self]
 
     @property
     def total_bond_order(self) -> int:
@@ -421,14 +421,7 @@ class Molecule:
 
     def __init__(self, atoms: Optional[List[Atom]] = None):
         self._atoms = set(atoms) if atoms is not None else set()
-        self._graph = defaultdict(lambda: defaultdict(lambda: None))
-
-    @property
-    def bonds(self) -> List[Bond]:
-        bonds = set()
-        for atom in self._atoms:
-            bonds.update(set(atom.bonds))
-        return list(bonds)
+        self.bonds = defaultdict(lambda: defaultdict(lambda: None))
 
     def add(self, atom: Atom, added_ok=False):
         """
@@ -479,8 +472,8 @@ class Molecule:
             raise BondingError("Bonding must occur within a molecule")
         if atom.molecule != other_atom.molecule:
             raise BondingError("Both atoms must be associated with the same molecule")
-        self._graph[atom][other_atom] = type_
-        self._graph[other_atom][atom] = type_
+        self.bonds[atom][other_atom] = type_
+        self.bonds[other_atom][atom] = type_
 
     def elem_count(self, element: Element) -> int:
         """
