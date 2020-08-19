@@ -149,6 +149,12 @@ class Atom(models.Atom):
 
 class Bond(models.Bond):
     def __init__(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
+        if type_ is None:
+            type_ = (
+                BondType(1, True, None)
+                if atom.aromatic and other_atom.aromatic
+                else BondType(1, False, None)
+            )
         if type_.aromatic and not (atom.aromatic and other_atom.aromatic):
             raise BondingError("Cannot use aromatic between non-aromatic atoms")
         super().__init__(atom, other_atom, type_=type_)

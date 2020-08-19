@@ -402,16 +402,7 @@ class Bond:
         if atom.bonded_to(other_atom):
             raise BondingError("Atoms are already bonded")
         if type_ is None:
-            type_ = (
-                BondType(1, True, None)
-                if atom.aromatic and other_atom.aromatic
-                else BondType(1, False, None)
-            )
-        if type_.aromatic and not (atom.aromatic and other_atom.aromatic):
-            raise BondingError(
-                "Aromatic bond cannot be used between atoms "
-                "that are not both aromatic"
-            )
+            type_ = BondType(1, False, None)
         self.atoms = (atom, other_atom)
         self.type = type_
 
