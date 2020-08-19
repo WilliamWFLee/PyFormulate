@@ -241,12 +241,6 @@ class Atom:
 
         :type: ChiralClass
 
-    .. attribute:: bonds
-
-        The bonds of the atom
-
-        :type: List[Atom]
-
     .. attribute:: atom_class
 
         The atom class of the atom, as defined by the SMILES specification
@@ -260,7 +254,6 @@ class Atom:
         *,
         isotope: Optional[int] = None,
         charge: int = 0,
-        bonds: Sequence["Bond"] = None,
         **kwargs,
     ):
         """
@@ -273,8 +266,6 @@ class Atom:
         :type isotope: Optional[int]
         :param charge: The charge of the atom, defaults to 0
         :type charge: int
-        :param bonds: Bonds associated with this atom, defaults to None
-        :type bonds: Sequence[Bond]
         :raises ValueError: If element is a string, and it does not represent a valid chemical element
         """
         if isinstance(element, str):
@@ -285,7 +276,6 @@ class Atom:
         self.isotope = isotope
         self.element = element
         self.charge = charge
-        self.bonds = list(bonds) if bonds else []
         self.molecule = None
         self.__dict__.update(**kwargs)
 
