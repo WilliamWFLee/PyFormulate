@@ -280,6 +280,10 @@ class Atom:
         self.__dict__.update(**kwargs)
 
     @property
+    def bonds(self) -> Dict["Atom", BondType]:
+        return self.molecule._graph[self]
+
+    @property
     def total_bond_order(self) -> int:
         """
         The sum of the orders of the bonds this atom is participating in.
