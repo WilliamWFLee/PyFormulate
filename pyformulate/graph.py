@@ -53,5 +53,22 @@ class InfoGraph:
         self._dict[value][other] = info
         self._dict[other][value] = info
 
+    def is_connected(self, value, other):
+        """
+        Determines whether or not two nodes are connected on the graph
+
+        :param value: The value of one node
+        :type value: Hashable
+        :param other: The value of the other node
+        :type other: Hashable
+        :return: Whether the nodes are connected
+        :rtype: bool
+        """
+        try:
+            self._dict[value][other]
+            return True
+        except KeyError:
+            return False
+
     def __contains__(self, value):
         return value in self._dict
