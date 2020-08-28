@@ -81,6 +81,10 @@ class Node:
     Use of this class to represent the nodes
     in an instance of :class:`InfoGraph` is completely optional,
     however it can be useful to derive from this class,
+
+    .. attribute:: graph
+
+        The instance of :class:`InfoGraph` this node is associated with
     """
 
     def __init__(self, graph: Optional[InfoGraph] = None):
