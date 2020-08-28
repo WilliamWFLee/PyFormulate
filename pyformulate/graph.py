@@ -8,7 +8,7 @@ Module for graph-based functionality
 """
 
 from collections import defaultdict
-from typing import Any, Hashable, Optional
+from typing import Any, Dict, Hashable, Optional
 
 
 class InfoGraph:
@@ -78,6 +78,12 @@ class InfoGraph:
             return True
         except KeyError:
             return False
+
+    def neighbours_of(self, value: Hashable) -> Dict[Hashable, Any]:
+        try:
+            return self._dict[value]
+        except KeyError:
+            raise ValueError(f"{value!r} is not in this graph")
 
     def __contains__(self, value):
         return value in self._dict
