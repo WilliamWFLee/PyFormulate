@@ -8,7 +8,7 @@ Module for graph-based functionality
 """
 
 from collections import defaultdict
-from typing import Any, Dict, Hashable, Optional
+from typing import Any, Dict, Hashable, Iterator, Optional
 
 
 class InfoGraph:
@@ -87,6 +87,9 @@ class InfoGraph:
 
     def __contains__(self, value):
         return value in self._dict
+
+    def __iter__(self):
+        return iter(self._dict)
 
 
 class Node:
