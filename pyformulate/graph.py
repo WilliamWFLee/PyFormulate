@@ -36,3 +36,7 @@ class InfoGraph:
 
     def __init__(self):
         self.graph = defaultdict(dict)
+
+    def connect(self, value, other, info=None):
+        self.graph[value][other] = info
+        self.graph[other][value] = info
