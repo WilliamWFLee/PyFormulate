@@ -365,6 +365,8 @@ class Molecule(InfoGraph):
     Represents a molecule
     """
 
+    node_class = Atom
+
     def __init__(self):
         super().__init__()
 
@@ -383,6 +385,16 @@ class Molecule(InfoGraph):
         if atom in self and not added_ok:
             raise ValueError("Atom already exists in this molecule")
         super().add(atom)
+
+    def new_atom(self, *args, **kwargs) -> Atom:
+        """
+        Creates a new atom in this molecule
+        The arguments are passed directly to the constructor for :class:`Atom`,
+        and the new atom is added to this molecule.
+        :return: The new atom
+        :rtype: Atom
+        """
+        return super().new_node(*args, **kwargs)
 
     def bond(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
         """
