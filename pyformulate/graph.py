@@ -8,6 +8,7 @@ Module for graph-based functionality
 """
 
 from collections import defaultdict
+from typing import Hashable, Any
 
 
 class InfoGraph:
@@ -37,15 +38,15 @@ class InfoGraph:
     def __init__(self):
         self._dict = defaultdict(dict)
 
-    def connect(self, value, other, info=None):
+    def connect(self, value: Hashable, other: Hashable, info: Any = None):
         """
         Connects two values representing nodes on the graph together,
         with the optional info describing the edge
 
         :param value: One of the node's value
-        :type value: Any
+        :type value: Hashable
         :param other: The other node's value
-        :type other: Any
+        :type other: Hashable
         :param info: The info associated with the edge between them, defaults to None
         :type info: Any
         """
