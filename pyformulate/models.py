@@ -251,9 +251,9 @@ class Atom(Node):
 
     def __init__(
         self,
-        element: Union[str, Element],
         molecule: Optional["Molecule"] = None,
         *,
+        element: Union[str, Element] = None,
         isotope: Optional[int] = None,
         charge: int = 0,
         **kwargs,
@@ -270,6 +270,8 @@ class Atom(Node):
         :type charge: int
         :raises ValueError: If element is a string, and it does not represent a valid chemical element
         """
+        if element is None:
+            raise ValueError("Value for argument 'element' cannot be None")
         if isinstance(element, str):
             try:
                 element = Element[element.title()]
