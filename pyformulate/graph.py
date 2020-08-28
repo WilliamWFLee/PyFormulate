@@ -8,7 +8,7 @@ Module for graph-based functionality
 """
 
 from collections import defaultdict
-from typing import Any, Dict, Hashable, Iterator, Optional
+from typing import Any, Dict, Hashable, Optional
 
 
 class InfoGraph:
