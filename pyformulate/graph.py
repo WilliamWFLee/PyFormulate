@@ -80,6 +80,16 @@ class InfoGraph:
             return False
 
     def neighbours_of(self, value: Hashable) -> Dict[Hashable, Any]:
+        """
+        Returns a dictionary mapping the values of the node connected
+        to this node, and the value associated with the edge between this node
+        and the other node.
+
+        :param value: The value of the node to find neighbours of
+        :type value: Hashable
+        :return: The dictionary of node values to edge value
+        :rtype: Dict[Hashable, Any]
+        """
         try:
             return self._dict[value]
         except KeyError:
