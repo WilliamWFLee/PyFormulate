@@ -159,14 +159,14 @@ class InfoGraph:
         except KeyError:
             raise ValueError(f"{value!r} is not in this graph")
 
-    def new_node(self) -> Node:
+    def new_node(self, *args, **kwargs) -> Node:
         """
         Creates a new node in this graph
 
         :return: The newly created node
         :rtype: Node
         """
-        node = self.node_class(self)
+        node = self.node_class(self, *args, **kwargs)
         self.add(node)
         return node
 
