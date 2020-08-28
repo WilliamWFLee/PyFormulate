@@ -15,7 +15,7 @@ class InfoGraph:
     A class for defining a graph whose edges have additional information
     associated with them.
 
-    Programmatically, the graph is implemented as in an dictionary of dictionaries.
+    Programmatically, the graph is implemented as a dictionary of dictionaries.
     The keys of the outer dictionary are the nodes of the graphs,
     and the keys of each inner dictionary are the nodes to which to the corresponding
     node is attached to. The values of the inner dictionaries
