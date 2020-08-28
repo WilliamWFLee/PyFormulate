@@ -121,26 +121,26 @@ class Node:
 
         Notice how the other value does not have to be an instance of :class:`Node`.
 
-        :param other: [description]
+        :param other: The value of the node to connect to
         :type other: Hashable
-        :param info: [description], defaults to None
-        :type info: Any, optional
+        :param info: The value associated with the new edge, defaults to None
+        :type info: Any
         """
         self.graph.connect(self, other, info)
 
-    def is_connected_to(self, other: Hashable):
+    def is_connected_to(self, other: Hashable) -> bool:
         """
         Determines if this node is connected to another node.
 
         Like :meth:`Node.connect_to`, the other node value
         does not have to be an instance of :class:`Node`.
 
-        :param other: [description]
+        :param other: The value of the node to check
         :type other: Hashable
         """
         self.graph.are_connected(self, other)
 
-    def neighbours(self):
+    def neighbours(self) -> Dict[Hashable, Any]:
         """
         Returns a dictionary of the neighbours of this node,
         mapping the node to the info associated with the edge.
