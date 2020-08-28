@@ -8,7 +8,7 @@ Module for graph-based functionality
 """
 
 from collections import defaultdict
-from typing import Hashable, Any
+from typing import Any, Hashable, Optional
 
 
 class InfoGraph:
@@ -72,3 +72,26 @@ class InfoGraph:
 
     def __contains__(self, value):
         return value in self._dict
+
+
+class Node:
+    """
+    A class for representing a node on a graph.
+
+    Use of this class to represent the nodes
+    in an instance of :class:`InfoGraph` is completely optional,
+    however it can be useful to derive from this class,
+    """
+
+    def __init__(self, graph: Optional[InfoGraph] = None):
+        """
+        Instantiates an instance of a node, with an optional parameter
+        for the instance :class:`InfoGraph` it is associated to.
+        If it is not specified, a new graph is created for it.
+
+        :param graph: The graph, defaults to None
+        :type graph: Optional[InfoGraph]
+        """
+        if graph is None:
+            graph = InfoGraph()
+        self.graph = graph
