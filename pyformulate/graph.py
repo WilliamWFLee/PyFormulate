@@ -38,5 +38,16 @@ class InfoGraph:
         self.graph = defaultdict(dict)
 
     def connect(self, value, other, info=None):
+        """
+        Connects two values representing nodes on the graph together,
+        with the optional info describing the edge
+
+        :param value: One of the node's value
+        :type value: Any
+        :param other: The other node's value
+        :type other: Any
+        :param info: The info associated with the edge between them, defaults to None
+        :type info: Any
+        """
         self.graph[value][other] = info
         self.graph[other][value] = info
