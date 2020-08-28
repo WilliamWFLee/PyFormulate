@@ -95,3 +95,16 @@ class Node:
         if graph is None:
             graph = InfoGraph()
         self.graph = graph
+
+    def connect_to(self, other: Hashable, info: Any = None):
+        """
+        Connects a node to another node in the graph associated with this molecule.
+
+        Notice how the other value does not have to be an instance of :class:`Node`.
+
+        :param other: [description]
+        :type other: Hashable
+        :param info: [description], defaults to None
+        :type info: Any, optional
+        """
+        self.graph.connect(self, other, info)
