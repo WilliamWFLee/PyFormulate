@@ -284,11 +284,11 @@ class Atom(Node):
 
     @property
     def molecule(self) -> "Molecule":
-        return super().graph
+        return self.graph
 
     @molecule.setter
     def molecule(self, molecule):
-        super().graph = molecule
+        self.graph = molecule
 
     @property
     def bonds(self) -> Dict["Atom", BondType]:
