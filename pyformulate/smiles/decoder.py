@@ -164,7 +164,7 @@ class Decoder:
         if symbol.isalpha() and symbol.islower():
             if symbol not in AROMATIC_ORGANIC:
                 raise DecodeError("Unknown aromatic organic", symbol, self._stream.pos)
-            atom = Atom(next(self._stream), aromatic=True)
+            atom = Atom(element=next(self._stream), aromatic=True)
         return atom
 
     def _parse_aliphatic_organic(self) -> Optional[Atom]:
@@ -181,7 +181,7 @@ class Decoder:
         ):
             symbol += next(self._stream)
         if symbol in ALIPHATIC_ORGANIC:
-            return Atom(symbol)
+            return Atom(element=symbol)
         raise DecodeError("Unknown aliphatic organic", symbol, self._stream.pos - 1)
 
     def _parse_organic_atom(self) -> Optional[Atom]:
@@ -366,7 +366,7 @@ class Decoder:
         atom_class = self._parse_atom_class()
 
         atom = Atom(
-            element,
+            element=element,
             isotope=isotope,
             aromatic=aromatic,
             chiral_class=chiral_class,
