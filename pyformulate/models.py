@@ -279,10 +279,16 @@ class Atom(Node):
         self.isotope = isotope
         self.element = element
         self.charge = charge
-        self.molecule = molecule
         self.__dict__.update(**kwargs)
-
         super().__init__(molecule)
+
+    @property
+    def molecule(self) -> "Molecule":
+        return super().graph
+
+    @molecule.setter
+    def molecule(self, molecule):
+        super().graph = molecule
 
     @property
     def bonds(self) -> Dict["Atom", BondType]:
