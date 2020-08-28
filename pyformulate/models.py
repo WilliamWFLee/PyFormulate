@@ -358,8 +358,6 @@ class Molecule:
     Represents a molecule
     """
 
-    atom_class = Atom
-
     def __init__(self, atoms: Optional[List[Atom]] = None):
         self._atoms = set(atoms) if atoms is not None else set()
         self.bonds = defaultdict(lambda: defaultdict(lambda: None))
@@ -380,20 +378,6 @@ class Molecule:
             raise ValueError("Atom already exists in this molecule")
         atom.molecule = self
         self._atoms.add(atom)
-
-    def new_atom(self, *args, **kwargs) -> Atom:
-        """
-        Creates a new atom in this molecule
-
-        The arguments are passed directly to the constructor for :class:`Atom`,
-        and the new atom is added to this molecule.
-
-        :return: The new atom
-        :rtype: Atom
-        """
-        atom = self.atom_class(*args, **kwargs)
-        self.add(atom)
-        return atom
 
     def bond(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
         """
