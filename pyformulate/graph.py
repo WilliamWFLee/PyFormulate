@@ -35,7 +35,7 @@ class InfoGraph:
     """
 
     def __init__(self):
-        self.graph = defaultdict(dict)
+        self._dict = defaultdict(dict)
 
     def connect(self, value, other, info=None):
         """
@@ -49,5 +49,8 @@ class InfoGraph:
         :param info: The info associated with the edge between them, defaults to None
         :type info: Any
         """
-        self.graph[value][other] = info
-        self.graph[other][value] = info
+        self._dict[value][other] = info
+        self._dict[other][value] = info
+
+    def __contains__(self, value):
+        return value in self._dict
