@@ -139,3 +139,13 @@ class Node:
         :type other: Hashable
         """
         self.graph.are_connected(self, other)
+
+    def neighbours(self):
+        """
+        Returns a dictionary of the neighbours of this node,
+        mapping the node to the info associated with the edge.
+
+        :return: The dictionary
+        :rtype: Dict[Hashable, Any]
+        """
+        return self.graph.neighbours_of(self)
