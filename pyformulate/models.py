@@ -16,6 +16,8 @@ from collections import defaultdict
 from enum import Enum
 from typing import Dict, Iterator, List, Optional, Sequence, Union
 
+from .graph import Node
+
 
 class Element(Enum):
     """
@@ -213,7 +215,7 @@ class BondType:
         )
 
 
-class Atom:
+class Atom(Node):
     """
     Represents an atom, ion, etc.
 
@@ -251,6 +253,7 @@ class Atom:
     def __init__(
         self,
         element: Union[str, Element],
+        molecule: Optional["Molecule"] = None,
         *,
         isotope: Optional[int] = None,
         charge: int = 0,
@@ -276,12 +279,14 @@ class Atom:
         self.isotope = isotope
         self.element = element
         self.charge = charge
-        self.molecule = None
+        self.molecule = molecule
         self.__dict__.update(**kwargs)
+
+        super().__init__(molecule)
 
     @property
     def bonds(self) -> Dict["Atom", BondType]:
-        return self.molecule.bonds[self]
+        return super().neighbours()
 
     @property
     def total_bond_order(self) -> int:
@@ -315,7 +320,7 @@ class Atom:
         :type bond_type: Optional[BondType]
         :raises BondingError: If this atom is not associated with a molecule
         """
-        self.molecule.bond(self, atom, bond_type)
+        super().connect_to(atom, bond_type)
 
     def bonded_to(self, atom: "Atom") -> bool:
         """
@@ -326,7 +331,7 @@ class Atom:
         :return: :data:`True` if the atom is bonded to this one, otherwise :data:`False`
         :rtype: bool
         """
-        return self.bonds[atom] is not None
+        return super().is_connected_to(atom)
 
     def neighbours(self) -> List["Atom"]:
         """
@@ -335,12 +340,7 @@ class Atom:
         :return: The atoms bonded to this atom
         :rtype: List[Atom]
         """
-        atoms = []
-        for bond in self.bonds:
-            other_atom = bond.atoms[0] if bond.atoms[1] == self else bond.atoms[1]
-            atoms.append(other_atom)
-
-        return atoms
+        return list(self.bonds.keys())
 
     def __str__(self):
         return "{0}{1}".format(
