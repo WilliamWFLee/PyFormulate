@@ -6,10 +6,10 @@ Models specific to SMILES interpretation
 """
 
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from .. import models
-from ..models import CisTransType, Element, BondType, BondingError
+from ..models import CisTransType, Element
 
 # Defines the organic subset of elements
 ALIPHATIC_ORGANIC = ("B", "C", "N", "O", "S", "P", "F", "Cl", "Br", "I")
@@ -125,7 +125,6 @@ class Atom(models.Atom):
         isotope: Optional[int] = None,
         charge: int = 0,
         aromatic: bool = False,
-        bonds: Optional[List["Bond"]] = None,
         atom_class: int = 0,
         chiral_class: Optional[ChiralClass] = None,
     ):
@@ -134,7 +133,6 @@ class Atom(models.Atom):
             isotope=isotope,
             charge=charge,
             aromatic=aromatic,
-            bonds=bonds,
             atom_class=atom_class,
             chiral_class=chiral_class,
         )
@@ -147,18 +145,5 @@ class Atom(models.Atom):
         ).format(type(self), self)
 
 
-class Bond(models.Bond):
-    def __init__(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
-        if type_ is None:
-            type_ = (
-                BondType(1, True, None)
-                if atom.aromatic and other_atom.aromatic
-                else BondType(1, False, None)
-            )
-        if type_.aromatic and not (atom.aromatic and other_atom.aromatic):
-            raise BondingError("Cannot use aromatic between non-aromatic atoms")
-        super().__init__(atom, other_atom, type_=type_)
-
-
 class Molecule(models.Molecule):
-    atom_class = Atom
+    pass
