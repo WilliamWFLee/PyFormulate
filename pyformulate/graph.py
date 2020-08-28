@@ -38,6 +38,15 @@ class InfoGraph:
     def __init__(self):
         self._dict = defaultdict(dict)
 
+    def add(self, value: Hashable):
+        """
+        Adds a value as a node to this graph
+
+        :param value: The value to add
+        :type value: Hashable
+        """
+        self._dict[value] = {}
+
     def connect(self, value: Hashable, other: Hashable, info: Any = None):
         """
         Connects two values representing nodes on the graph together,
