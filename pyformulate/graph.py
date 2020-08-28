@@ -108,3 +108,15 @@ class Node:
         :type info: Any, optional
         """
         self.graph.connect(self, other, info)
+
+    def is_connected_to(self, other: Hashable):
+        """
+        Determines if this node is connected to another node.
+
+        Like :meth:`Node.connect_to`, the other node value
+        does not have to be an instance of :class:`Node`.
+
+        :param other: [description]
+        :type other: Hashable
+        """
+        self.graph.are_connected(self, other)
