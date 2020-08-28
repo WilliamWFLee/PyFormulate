@@ -24,7 +24,7 @@ class Node:
         The instance of :class:`InfoGraph` this node is associated with
     """
 
-    def __init__(self, graph: Optional[InfoGraph] = None):
+    def __init__(self, graph: Optional["InfoGraph"] = None):
         """
         Instantiates an instance of a node, with an optional parameter
         for the instance :class:`InfoGraph` it is associated to.
