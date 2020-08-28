@@ -53,7 +53,7 @@ class InfoGraph:
         self._dict[value][other] = info
         self._dict[other][value] = info
 
-    def is_connected(self, value: Hashable, other: Hashable) -> bool:
+    def are_connected(self, value: Hashable, other: Hashable) -> bool:
         """
         Determines whether or not two nodes are connected on the graph
 
