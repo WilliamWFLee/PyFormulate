@@ -12,11 +12,10 @@ For example, atoms parsed from SMILES strings will indicate which atoms
 are part of aromatic cycles.
 """
 
-from collections import defaultdict
 from enum import Enum
-from typing import Dict, Iterator, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union
 
-from .graph import Node
+from .graph import InfoGraph, Node
 
 
 class Element(Enum):
@@ -359,14 +358,13 @@ class Atom(Node):
         ).format(type(self), self)
 
 
-class Molecule:
+class Molecule(InfoGraph):
     """
     Represents a molecule
     """
 
-    def __init__(self, atoms: Optional[List[Atom]] = None):
-        self._atoms = set(atoms) if atoms is not None else set()
-        self.bonds = defaultdict(lambda: defaultdict(lambda: None))
+    def __init__(self):
+        super().__init__()
 
     def add(self, atom: Atom, added_ok=False):
         """
@@ -380,10 +378,9 @@ class Molecule:
         :param added_ok: Whether to ignore the atom already being in this molecule
         :type added_ok: bool
         """
-        if atom in self._atoms and not added_ok:
+        if atom in self and not added_ok:
             raise ValueError("Atom already exists in this molecule")
-        atom.molecule = self
-        self._atoms.add(atom)
+        super().add(atom)
 
     def bond(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
         """
@@ -403,8 +400,7 @@ class Molecule:
             raise BondingError("Bonding must occur within a molecule")
         if atom.molecule != other_atom.molecule:
             raise BondingError("Both atoms must be associated with the same molecule")
-        self.bonds[atom][other_atom] = type_
-        self.bonds[other_atom][atom] = type_
+        super().connect(atom, other_atom, type_)
 
     def elem_count(self, element: Element) -> int:
         """
@@ -415,7 +411,7 @@ class Molecule:
         :return: The number of atoms of that element
         :rtype: int
         """
-        return sum(1 for atom in self._atoms if atom.element == element)
+        return sum(1 for atom in self if atom.element == element)
 
     def all_elem_counts(self) -> Dict[Element, int]:
         """
@@ -426,7 +422,7 @@ class Molecule:
         :rtype: Dict[Element, int]
         """
         counts = {}
-        for atom in self._atoms:
+        for atom in self:
             counts.setdefault(atom.element, 0)
             counts[atom.element] += 1
 
@@ -460,7 +456,7 @@ class Molecule:
         elif isinstance(elements, Element):
             elements = (elements,)
         atoms = []
-        for atom in self._atoms:
+        for atom in self:
             for attr, value in kwargs.items():
                 try:
                     if getattr(atom, attr) != value:
@@ -482,15 +478,9 @@ class Molecule:
         The other molecules are unchanged by this method
         """
         for other in others:
-            self._atoms = self._atoms.union(other._atoms)
+            self.add(other)
         for atom in self._atoms:
             atom.molecule = self
-
-    def __iter__(self) -> Iterator[Atom]:
-        """
-        Iterates over the atoms of the molecule
-        """
-        return iter(self._atoms.copy())
 
     def __str__(self):
         sort_order = [
