@@ -353,65 +353,6 @@ class Atom:
         ).format(type(self), self)
 
 
-class Bond:
-    """
-    Represents a bond between two Atoms
-
-    The attributes of the :attr:`Bond.type` attribute can be accessed directly
-    from the :class:`Bond` object. For example,
-
-    >>> bond.type.order == bond.order
-    True
-
-    .. attribute:: atoms
-
-        A tuple of the atoms in the bond
-
-        :type: Tuple[Atom]
-
-    .. attribute:: type
-
-        The bond's type information
-
-        :type: BondType
-    """
-
-    def __init__(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
-        """
-        Creates a new :class:`Bond` between two atoms
-
-        :param atom: One of the atoms to bond
-        :type atom: Atom
-        :param other_atom: The other atom to bond
-        :type other_atom: Atom
-        :param type_: The bond type, defaults to None
-        :type type_: Optional[BondType]
-        :raises BondingError: If the bond is illegal
-        """
-        if atom == other_atom:
-            raise BondingError("Cannot bond atom to itself")
-        if atom.bonded_to(other_atom):
-            raise BondingError("Atoms are already bonded")
-        if type_ is None:
-            type_ = BondType(1, False, None)
-        self.atoms = (atom, other_atom)
-        self.type = type_
-
-    def __getattr__(self, key):
-        return getattr(self.type, key)
-
-    def __contains__(self, atom: Atom):
-        return atom in self.atoms
-
-    def __str__(self):
-        return "<Bond between {0} and {1} of order {2}>".format(
-            *self.atoms, self.type, self.order
-        )
-
-    def __repr__(self):
-        return str(self)
-
-
 class Molecule:
     """
     Represents a molecule
