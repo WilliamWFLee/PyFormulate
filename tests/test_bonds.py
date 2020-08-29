@@ -35,7 +35,5 @@ def test_quadruple_bonds():
 
 def test_cis_trans_bonds():
     for c in ELEMENTS:
-        assert (
-            list(loads(f"[{c}]/[{c}]").molecules[0].atoms()[0].bonds.values())[0].cis_trans
-            == CisTransType.BOTTOM_TOP
-        )
+        bond_types = list(loads(f"[{c}]/[{c}]").molecules[0].atoms()[0].bonds.values())
+        assert bond_types[0].cis_trans == CisTransType.BOTTOM_TOP

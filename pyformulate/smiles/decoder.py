@@ -3,7 +3,7 @@
 
 import warnings
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from ..models import BondType, Element
 from .models import (
