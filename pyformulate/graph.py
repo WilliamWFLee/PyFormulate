@@ -168,7 +168,7 @@ class InfoGraph:
         :return: The newly created node
         :rtype: Node
         """
-        node = self.node_class(self, *args, **kwargs)
+        node = self.node_class(*args, **kwargs)
         self.add(node)
         return node
 
