@@ -12,10 +12,9 @@ For example, atoms parsed from SMILES strings will indicate which atoms
 are part of aromatic cycles.
 """
 
+from collections import defaultdict
 from enum import Enum
 from typing import Dict, List, Optional, Sequence, Union
-
-from .graph import InfoGraph, Node
 
 
 class Element(Enum):
@@ -214,7 +213,7 @@ class BondType:
         )
 
 
-class Atom(Node):
+class Atom:
     """
     Represents an atom, ion, etc.
 
@@ -277,23 +276,15 @@ class Atom(Node):
                 element = Element[element.title()]
             except KeyError:
                 raise ValueError(f"{element!r} is not a valid symbol") from None
+        self.molecule = molecule
         self.isotope = isotope
         self.element = element
         self.charge = charge
         self.__dict__.update(**kwargs)
-        super().__init__(molecule)
-
-    @property
-    def molecule(self) -> "Molecule":
-        return self.graph
-
-    @molecule.setter
-    def molecule(self, molecule):
-        self.graph = molecule
 
     @property
     def bonds(self) -> Dict["Atom", BondType]:
-        return super().neighbours()
+        return self.molecule.neighbours_of(self)
 
     @property
     def total_bond_order(self) -> int:
@@ -327,7 +318,7 @@ class Atom(Node):
         :type bond_type: Optional[BondType]
         :raises BondingError: If this atom is not associated with a molecule
         """
-        super().connect_to(atom, bond_type)
+        self.molecule.bond(self, atom, bond_type)
 
     def bonded_to(self, atom: "Atom") -> bool:
         """
@@ -338,7 +329,7 @@ class Atom(Node):
         :return: :data:`True` if the atom is bonded to this one, otherwise :data:`False`
         :rtype: bool
         """
-        return super().is_connected_to(atom)
+        return self.molecule.are_connected(self, atom)
 
     def neighbours(self) -> List["Atom"]:
         """
@@ -347,7 +338,7 @@ class Atom(Node):
         :return: The atoms bonded to this atom
         :rtype: List[Atom]
         """
-        return list(self.bonds.keys())
+        return self.molecule.neighbours_of(self)
 
     def __str__(self):
         return "{0}{1}".format(
@@ -360,12 +351,15 @@ class Atom(Node):
         ).format(type(self), self)
 
 
-class Molecule(InfoGraph):
+class Molecule:
     """
     Represents a molecule
     """
 
-    node_class = Atom
+    atom_class = Atom
+
+    def __init__(self):
+        self._dict = defaultdict(dict)
 
     @property
     def bonds(self) -> Dict[Atom, Dict[Atom, BondType]]:
@@ -385,7 +379,8 @@ class Molecule(InfoGraph):
         """
         if atom in self and not added_ok:
             raise ValueError("Atom already exists in this molecule")
-        super().add(atom)
+        self._dict[atom] = {}
+        atom.molecule = self
 
     def new_atom(self, *args, **kwargs) -> Atom:
         """
@@ -395,7 +390,9 @@ class Molecule(InfoGraph):
         :return: The new atom
         :rtype: Atom
         """
-        return super().new_node(*args, **kwargs)
+        atom = self.atom_class(*args, **kwargs)
+        self.add(atom)
+        return atom
 
     def bond(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
         """
@@ -411,11 +408,43 @@ class Molecule(InfoGraph):
         """
         if type_ is None:
             type_ = BondType(1, False, None)
-        if atom.molecule is None or other_atom.molecule is None:
-            raise BondingError("Bonding must occur within a molecule")
-        if atom.molecule != other_atom.molecule:
-            raise BondingError("Both atoms must be associated with the same molecule")
-        super().connect(atom, other_atom, type_)
+        self._dict[atom][other_atom] = type_
+        self._dict[other_atom][atom] = type_
+        atom.molecule = self
+        other_atom.molecule = self
+
+    def are_bonded(self, atom: Atom, other_atom: Atom):
+        """
+        Determines whether or not two atoms are connected
+
+        :param atom: One of the atoms
+        :type atom: Atom
+        :param other_atom: The other atom
+        :type other_atom: Atom
+        :return: Whether the atoms are connected
+        :rtype: bool
+        """
+        try:
+            self._dict[atom][other_atom]
+            return True
+        except KeyError:
+            return False
+
+    def neighbours_of(self, atom: Atom) -> Dict[Atom, BondType]:
+        """
+        Returns a dictionary mapping the values of the node connected
+        to this node, and the value associated with the edge between this node
+        and the other node.
+
+        :param value: The value of the node to find neighbours of
+        :type value: Hashable
+        :return: The dictionary of node values to edge value
+        :rtype: Dict[Hashable, Any]
+        """
+        try:
+            return self._dict[atom]
+        except KeyError:
+            raise ValueError(f"{atom!r} is not in this molecule")
 
     def elem_count(self, element: Element) -> int:
         """
@@ -493,7 +522,7 @@ class Molecule(InfoGraph):
         The other molecules are unchanged by this method
         """
         for other in others:
-            self.add(other)
+            self._dict.update(self._dict)
 
     def __str__(self):
         sort_order = [
@@ -520,3 +549,9 @@ class Molecule(InfoGraph):
             )
 
         return s
+
+    def __contains__(self, value):
+        return value in self._dict
+
+    def __iter__(self):
+        return iter(self._dict.copy())

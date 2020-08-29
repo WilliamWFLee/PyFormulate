@@ -146,4 +146,4 @@ class Atom(models.Atom):
 
 
 class Molecule(models.Molecule):
-    node_class = Atom
+    atom_class = Atom
