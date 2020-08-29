@@ -174,4 +174,4 @@ class InfoGraph:
         return value in self._dict
 
     def __iter__(self):
-        return iter(self._dict)
+        return iter(self._dict.copy())
