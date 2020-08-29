@@ -110,6 +110,8 @@ class InfoGraph:
         :type value: Hashable
         """
         self._dict[value] = {}
+        if isinstance(value, Node):
+            value.graph = self
 
     def connect(self, value: Hashable, other: Hashable, info: Any = None):
         """
