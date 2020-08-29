@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import warnings
-from typing import List, Optional, Tuple
+from collections import defaultdict
+from typing import Dict, List, Optional, Set, Tuple
 
 from ..models import BondType, Element
 from .models import (
@@ -13,7 +14,6 @@ from .models import (
     CHAR_TO_CIS_TRANS,
     VALENCIES,
     Atom,
-    Bond,
     ChiralClass,
     Molecule,
 )
@@ -164,7 +164,7 @@ class Decoder:
         if symbol.isalpha() and symbol.islower():
             if symbol not in AROMATIC_ORGANIC:
                 raise DecodeError("Unknown aromatic organic", symbol, self._stream.pos)
-            atom = Atom(next(self._stream), aromatic=True)
+            atom = Atom(element=next(self._stream), aromatic=True)
         return atom
 
     def _parse_aliphatic_organic(self) -> Optional[Atom]:
@@ -181,7 +181,7 @@ class Decoder:
         ):
             symbol += next(self._stream)
         if symbol in ALIPHATIC_ORGANIC:
-            return Atom(symbol)
+            return Atom(element=symbol)
         raise DecodeError("Unknown aliphatic organic", symbol, self._stream.pos - 1)
 
     def _parse_organic_atom(self) -> Optional[Atom]:
@@ -366,7 +366,7 @@ class Decoder:
         atom_class = self._parse_atom_class()
 
         atom = Atom(
-            element,
+            element=element,
             isotope=isotope,
             aromatic=aromatic,
             chiral_class=chiral_class,
@@ -462,7 +462,7 @@ class Decoder:
         molecule.add(atom)
         # Adds the hydrogens
         for _ in range(hydrogen_count):
-            hydrogen = molecule.new_atom(Element.H)
+            hydrogen = molecule.new_atom(element=Element.H)
             molecule.bond(atom, hydrogen)
         # Parses ring bond and standard bond
         while True:
@@ -481,10 +481,10 @@ class Decoder:
                         f"Mismatched bond type for rnum {rnum}", "", self._stream.pos,
                     )
                 bond_type = bond_type if bond_type is not None else other_bond_type
-                atom.bond(other_atom, bond_type)
                 if other_atom.molecule != molecule:
                     self._molecules.remove(other_atom.molecule)
                     molecule.merge(other_atom.molecule)
+                atom.bond(other_atom, bond_type)
                 del self._rnums[rnum]  # Delete rnum for reuse
             else:  # Rnum not already encountered
                 self._rnums[rnum] = (atom, bond_type)
@@ -556,7 +556,7 @@ class Decoder:
                     if valency_diff > 0:
                         # If the current valency is lower than one of the valencies
                         for _ in range(valency_diff):
-                            hydrogen = molecule.new_atom(Element.H)
+                            hydrogen = molecule.new_atom(element=Element.H)
                             molecule.bond(atom, hydrogen)
                         break  # Ensures valency is always next-highest
                     elif valency_diff == 0:
@@ -565,43 +565,45 @@ class Decoder:
 
     def _determine_double_bonds(
         self,
-        atoms: List[Atom],
-        bonds: List[Bond],
-        double_bonds: Optional[List[Bond]] = None,
-    ) -> Optional[List[Bond]]:
+        bonds: Dict[Atom, Set[Atom]],
+        double_bonds: Optional[Dict[Atom, Set[Atom]]] = None,
+    ) -> Optional[Dict[Atom, Set[Atom]]]:
         # Finds a perfect matching for the graph given by the atoms and bonds
-        if double_bonds is None:
-            double_bonds = []
-        if not atoms:
+        if not bonds:
             return double_bonds
-        for bond in bonds:
-            proposed_double_bonds = self._determine_double_bonds(
-                list(filter(lambda atom: atom not in bond.atoms, atoms)),
-                list(filter(lambda b: b != bond, bonds)),
-                double_bonds,
-            )
-            if proposed_double_bonds is not None:
-                return proposed_double_bonds + [bond]
+        if double_bonds is None:
+            double_bonds = defaultdict(set)
+        for atom, neighbours in bonds.items():
+            for other_atom in neighbours:
+                proposed_double_bonds = self._determine_double_bonds(
+                    {
+                        k: {p for p in v if p not in (atom, other_atom)}
+                        for k, v in bonds.items()
+                        if k not in (atom, other_atom)
+                    },
+                    double_bonds,
+                )
+                if proposed_double_bonds is not None:
+                    proposed_double_bonds[atom].add(other_atom)
+                    return proposed_double_bonds
         return None
 
     def _kekulize(self, molecule: Molecule):
-        atoms = list(
-            filter(
-                lambda x: (
-                    x.aromatic
-                    and (
-                        x.valency not in VALENCIES[x.element]
-                        if x.element in VALENCIES
-                        else True
-                    )
-                ),
-                molecule.atoms(),
+        def aromatic_predicate(x):
+            return x.aromatic and (
+                x.valency not in VALENCIES[x.element]
+                if x.element in VALENCIES
+                else True
             )
-        )
-        bonds = list(filter(lambda x: x.aromatic, molecule.bonds))
-        if not atoms and not bonds:
+
+        bonds = {
+            k: {p for p in v if aromatic_predicate(p)}
+            for k, v in molecule.bonds.items()
+            if aromatic_predicate(k)
+        }
+        if not bonds:
             return
-        double_bonds = self._determine_double_bonds(atoms, bonds)
+        double_bonds = self._determine_double_bonds(bonds)
         if double_bonds is None:
             raise DecodeError(
                 f"Failed to verify aromaticity of molecule with formula {molecule}"

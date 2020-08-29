@@ -12,8 +12,9 @@ For example, atoms parsed from SMILES strings will indicate which atoms
 are part of aromatic cycles.
 """
 
+from collections import defaultdict
 from enum import Enum
-from typing import Dict, Iterator, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 
 class Element(Enum):
@@ -240,12 +241,6 @@ class Atom:
 
         :type: ChiralClass
 
-    .. attribute:: bonds
-
-        The bonds of the atom
-
-        :type: List[Atom]
-
     .. attribute:: atom_class
 
         The atom class of the atom, as defined by the SMILES specification
@@ -255,11 +250,11 @@ class Atom:
 
     def __init__(
         self,
-        element: Union[str, Element],
+        molecule: Optional["Molecule"] = None,
         *,
+        element: Union[str, Element] = None,
         isotope: Optional[int] = None,
         charge: int = 0,
-        bonds: Sequence["Bond"] = None,
         **kwargs,
     ):
         """
@@ -272,21 +267,24 @@ class Atom:
         :type isotope: Optional[int]
         :param charge: The charge of the atom, defaults to 0
         :type charge: int
-        :param bonds: Bonds associated with this atom, defaults to None
-        :type bonds: Sequence[Bond]
         :raises ValueError: If element is a string, and it does not represent a valid chemical element
         """
+        if element is None:
+            raise ValueError("Value for argument 'element' cannot be None")
         if isinstance(element, str):
             try:
                 element = Element[element.title()]
             except KeyError:
                 raise ValueError(f"{element!r} is not a valid symbol") from None
+        self.molecule = molecule
         self.isotope = isotope
         self.element = element
         self.charge = charge
-        self.bonds = list(bonds) if bonds else []
-        self.molecule = None
         self.__dict__.update(**kwargs)
+
+    @property
+    def bonds(self) -> Dict["Atom", BondType]:
+        return self.molecule.neighbours_of(self)
 
     @property
     def total_bond_order(self) -> int:
@@ -298,7 +296,7 @@ class Atom:
         :return: The sum of the bond orders
         :rtype: int
         """
-        return sum(bond.order for bond in self.bonds)
+        return sum(bond_type.order for bond_type in self.bonds.values())
 
     @property
     def valency(self) -> int:
@@ -312,16 +310,15 @@ class Atom:
 
     def bond(self, atom: "Atom", bond_type: Optional[BondType] = None):
         """
-        Bonds an atom to this atom
+        Bonds an atom to this atom. Both atoms must exist in a molecule
 
         :param atom: The atom to bond to
         :type atom: Atom
         :param bond_type: The bond type, defaults to None
         :type bond_type: Optional[BondType]
+        :raises BondingError: If this atom is not associated with a molecule
         """
-        bond = Bond(self, atom, bond_type)
-        for atm in (self, atom):
-            atm.bonds.append(bond)
+        self.molecule.bond(self, atom, bond_type)
 
     def bonded_to(self, atom: "Atom") -> bool:
         """
@@ -332,10 +329,7 @@ class Atom:
         :return: :data:`True` if the atom is bonded to this one, otherwise :data:`False`
         :rtype: bool
         """
-        for bond in self.bonds:
-            if atom in bond.atoms:
-                return True
-        return False
+        return self.molecule.are_connected(self, atom)
 
     def neighbours(self) -> List["Atom"]:
         """
@@ -344,12 +338,7 @@ class Atom:
         :return: The atoms bonded to this atom
         :rtype: List[Atom]
         """
-        atoms = []
-        for bond in self.bonds:
-            other_atom = bond.atoms[0] if bond.atoms[1] == self else bond.atoms[1]
-            atoms.append(other_atom)
-
-        return atoms
+        return self.molecule.neighbours_of(self)
 
     def __str__(self):
         return "{0}{1}".format(
@@ -362,65 +351,6 @@ class Atom:
         ).format(type(self), self)
 
 
-class Bond:
-    """
-    Represents a bond between two Atoms
-
-    The attributes of the :attr:`Bond.type` attribute can be accessed directly
-    from the :class:`Bond` object. For example,
-
-    >>> bond.type.order == bond.order
-    True
-
-    .. attribute:: atoms
-
-        A tuple of the atoms in the bond
-
-        :type: Tuple[Atom]
-
-    .. attribute:: type
-
-        The bond's type information
-
-        :type: BondType
-    """
-
-    def __init__(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
-        """
-        Creates a new :class:`Bond` between two atoms
-
-        :param atom: One of the atoms to bond
-        :type atom: Atom
-        :param other_atom: The other atom to bond
-        :type other_atom: Atom
-        :param type_: The bond type, defaults to None
-        :type type_: Optional[BondType]
-        :raises BondingError: If the bond is illegal
-        """
-        if atom == other_atom:
-            raise BondingError("Cannot bond atom to itself")
-        if atom.bonded_to(other_atom):
-            raise BondingError("Atoms are already bonded")
-        if type_ is None:
-            type_ = BondType(1, False, None)
-        self.atoms = (atom, other_atom)
-        self.type = type_
-
-    def __getattr__(self, key):
-        return getattr(self.type, key)
-
-    def __contains__(self, atom: Atom):
-        return atom in self.atoms
-
-    def __str__(self):
-        return "<Bond between {0} and {1} of order {2}>".format(
-            *self.atoms, self.type, self.order
-        )
-
-    def __repr__(self):
-        return str(self)
-
-
 class Molecule:
     """
     Represents a molecule
@@ -428,15 +358,12 @@ class Molecule:
 
     atom_class = Atom
 
-    def __init__(self, atoms: Optional[List[Atom]] = None):
-        self._atoms = set(atoms) if atoms is not None else set()
+    def __init__(self):
+        self._dict = defaultdict(dict)
 
     @property
-    def bonds(self) -> List[Bond]:
-        bonds = set()
-        for atom in self._atoms:
-            bonds.update(set(atom.bonds))
-        return list(bonds)
+    def bonds(self) -> Dict[Atom, Dict[Atom, BondType]]:
+        return self._dict.copy()
 
     def add(self, atom: Atom, added_ok=False):
         """
@@ -450,18 +377,16 @@ class Molecule:
         :param added_ok: Whether to ignore the atom already being in this molecule
         :type added_ok: bool
         """
-        if atom in self._atoms and not added_ok:
+        if atom in self and not added_ok:
             raise ValueError("Atom already exists in this molecule")
+        self._dict[atom] = {}
         atom.molecule = self
-        self._atoms.add(atom)
 
     def new_atom(self, *args, **kwargs) -> Atom:
         """
         Creates a new atom in this molecule
-
         The arguments are passed directly to the constructor for :class:`Atom`,
         and the new atom is added to this molecule.
-
         :return: The new atom
         :rtype: Atom
         """
@@ -469,22 +394,57 @@ class Molecule:
         self.add(atom)
         return atom
 
-    def bond(self, atom: Atom, other_atom: Atom, *args, **kwargs):
+    def bond(self, atom: Atom, other_atom: Atom, type_: Optional[BondType] = None):
         """
-        Bonds two atoms together, one of which must exist in this molecule.
-
-        Takes two positional arguments for the two atoms to bond,
-        and the rest of the arguments are passed to :meth:`Atom.bond`.
+        Bonds two atoms together, both of which must exist on this molecule
 
         :param atom: The atom to bond
         :type atom: Atom
         :param other_atom: The other atom to bond
         :type other_atom: Atom
+        :param type_: The bond type, defaults to None
+        :type type_: Optional[BondType]
         :raises ValueError: If neither atom exists in this moleculee
         """
-        if atom not in self._atoms and other_atom not in self._atoms:
-            raise ValueError("Neither atom exists in this molecule")
-        atom.bond(other_atom, *args, **kwargs)
+        if type_ is None:
+            type_ = BondType(1, False, None)
+        self._dict[atom][other_atom] = type_
+        self._dict[other_atom][atom] = type_
+        atom.molecule = self
+        other_atom.molecule = self
+
+    def are_bonded(self, atom: Atom, other_atom: Atom):
+        """
+        Determines whether or not two atoms are connected
+
+        :param atom: One of the atoms
+        :type atom: Atom
+        :param other_atom: The other atom
+        :type other_atom: Atom
+        :return: Whether the atoms are connected
+        :rtype: bool
+        """
+        try:
+            self._dict[atom][other_atom]
+            return True
+        except KeyError:
+            return False
+
+    def neighbours_of(self, atom: Atom) -> Dict[Atom, BondType]:
+        """
+        Returns a dictionary mapping the values of the node connected
+        to this node, and the value associated with the edge between this node
+        and the other node.
+
+        :param value: The value of the node to find neighbours of
+        :type value: Hashable
+        :return: The dictionary of node values to edge value
+        :rtype: Dict[Hashable, Any]
+        """
+        try:
+            return self._dict[atom]
+        except KeyError:
+            raise ValueError(f"{atom!r} is not in this molecule")
 
     def elem_count(self, element: Element) -> int:
         """
@@ -495,7 +455,7 @@ class Molecule:
         :return: The number of atoms of that element
         :rtype: int
         """
-        return sum(1 for atom in self._atoms if atom.element == element)
+        return sum(1 for atom in self if atom.element == element)
 
     def all_elem_counts(self) -> Dict[Element, int]:
         """
@@ -506,7 +466,7 @@ class Molecule:
         :rtype: Dict[Element, int]
         """
         counts = {}
-        for atom in self._atoms:
+        for atom in self:
             counts.setdefault(atom.element, 0)
             counts[atom.element] += 1
 
@@ -540,7 +500,7 @@ class Molecule:
         elif isinstance(elements, Element):
             elements = (elements,)
         atoms = []
-        for atom in self._atoms:
+        for atom in self:
             for attr, value in kwargs.items():
                 try:
                     if getattr(atom, attr) != value:
@@ -562,15 +522,7 @@ class Molecule:
         The other molecules are unchanged by this method
         """
         for other in others:
-            self._atoms = self._atoms.union(other._atoms)
-        for atom in self._atoms:
-            atom.molecule = self
-
-    def __iter__(self) -> Iterator[Atom]:
-        """
-        Iterates over the atoms of the molecule
-        """
-        return iter(self._atoms.copy())
+            self._dict.update(self._dict)
 
     def __str__(self):
         sort_order = [
@@ -597,3 +549,9 @@ class Molecule:
             )
 
         return s
+
+    def __contains__(self, value):
+        return value in self._dict
+
+    def __iter__(self):
+        return iter(self._dict.copy())
