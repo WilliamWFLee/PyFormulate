@@ -139,7 +139,7 @@ class Atom(models.Atom):
 
     def __repr__(self):
         return (
-            "{0.__qualname__}(element={1.element}, isotope={1.isotope}, "
+            "{0.__name__}(element={1.element}, isotope={1.isotope}, "
             "charge={1.charge}, chiral_class={1.chiral_class}, "
             "aromatic={1.aromatic}, atom_class={1.atom_class})"
         ).format(type(self), self)
