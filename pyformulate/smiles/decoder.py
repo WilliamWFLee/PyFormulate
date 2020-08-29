@@ -462,7 +462,7 @@ class Decoder:
         molecule.add(atom)
         # Adds the hydrogens
         for _ in range(hydrogen_count):
-            hydrogen = molecule.new_atom(Element.H)
+            hydrogen = molecule.new_atom(element=Element.H)
             molecule.bond(atom, hydrogen)
         # Parses ring bond and standard bond
         while True:
@@ -556,7 +556,7 @@ class Decoder:
                     if valency_diff > 0:
                         # If the current valency is lower than one of the valencies
                         for _ in range(valency_diff):
-                            hydrogen = molecule.new_atom(Element.H)
+                            hydrogen = molecule.new_atom(element=Element.H)
                             molecule.bond(atom, hydrogen)
                         break  # Ensures valency is always next-highest
                     elif valency_diff == 0:
