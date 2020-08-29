@@ -129,7 +129,7 @@ class Atom(models.Atom):
         chiral_class: Optional[ChiralClass] = None,
     ):
         super().__init__(
-            element,
+            element=element,
             isotope=isotope,
             charge=charge,
             aromatic=aromatic,
