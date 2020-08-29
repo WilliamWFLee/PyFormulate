@@ -367,8 +367,9 @@ class Molecule(InfoGraph):
 
     node_class = Atom
 
-    def __init__(self):
-        super().__init__()
+    @property
+    def bonds(self) -> Dict[Atom, Dict[Atom, BondType]]:
+        return self._dict.copy()
 
     def add(self, atom: Atom, added_ok=False):
         """
