@@ -494,8 +494,6 @@ class Molecule(InfoGraph):
         """
         for other in others:
             self.add(other)
-        for atom in self._atoms:
-            atom.molecule = self
 
     def __str__(self):
         sort_order = [
